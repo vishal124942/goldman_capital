@@ -37,12 +37,10 @@ export async function generateStatementPDF(
   const filePath = path.join(STATEMENTS_DIR, fileName);
   const fileUrl = `/statements/${fileName}`;
 
-  // Use createRequire to import pdfmake which is a specific CommonJS module
-  // Moved updates here to avoid async in Promise executor
-  const { createRequire } = await import("module");
-  const require = createRequire(import.meta.url);
+  // Use require directly in CommonJS mode
   let PdfPrinter;
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const pdfMakeModule = require("pdfmake/src/printer");
     console.log("Required pdfmake keys:", Object.keys(pdfMakeModule)); // DEBUG LOG
     PdfPrinter = pdfMakeModule.default || pdfMakeModule; // Try default if available
