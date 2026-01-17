@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "tsx watch src/index.ts",
         "start": "node dist/src/index.js",
-        "build": "tsc"
+        "build": "rm -rf dist && tsc"
     },
     "dependencies": {
         "bcryptjs": "^3.0.3",
