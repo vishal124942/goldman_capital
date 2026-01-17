@@ -39,6 +39,11 @@ app.use(express.urlencoded({ extended: false }));
 // Serve generated statement PDFs
 app.use("/statements", express.static(path.join(process.cwd(), "statements")));
 
+// Health check endpoint
+app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString(), environment: process.env.NODE_ENV });
+});
+
 // Logging middleware
 function log(message: string, source = "express") {
     const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -78,25 +83,32 @@ app.use((req, res, next) => {
 
 // Register all routes
 (async () => {
-    await registerRoutes(httpServer, app);
+    try {
+        log("Registering routes...");
+        await registerRoutes(httpServer, app);
+        log("Routes registered successfully.");
 
-    // Error handler
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-        const status = err.status || err.statusCode || 500;
-        const message = err.message || "Internal Server Error";
-        console.error("Error:", err);
-        res.status(status).json({ message });
-    });
+        // Error handler
+        app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+            const status = err.status || err.statusCode || 500;
+            const message = err.message || "Internal Server Error";
+            console.error("Express Error Handler:", err);
+            res.status(status).json({ message });
+        });
 
-    const port = parseInt(process.env.PORT || "3001", 10);
-    httpServer.listen(
-        {
-            port,
-            host: "0.0.0.0",
-        },
-        () => {
-            log(`Backend API server running on port ${port}`);
-            log(`CORS enabled for: ${process.env.FRONTEND_URL || "http://localhost:5173"}`);
-        },
-    );
+        const port = parseInt(process.env.PORT || "3001", 10);
+        httpServer.listen(
+            {
+                port,
+                host: "0.0.0.0",
+            },
+            () => {
+                log(`Backend API server running on port ${port}`);
+                log(`Allowed Origins: ${allowedOrigins.join(", ")}`);
+            },
+        );
+    } catch (error) {
+        console.error("CRITICAL: Failed to start server:", error);
+        process.exit(1);
+    }
 })();
