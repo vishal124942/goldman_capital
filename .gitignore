@@ -9,3 +9,5 @@ vite.config.ts.*
 .env.*
 backend/.env
 frontend/.env
+*.xlsx
+*.pdf
