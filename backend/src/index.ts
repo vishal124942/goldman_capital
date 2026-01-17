@@ -13,10 +13,10 @@ const app = express();
 const httpServer = createServer(app);
 
 // CORS configuration for frontend
-const allowedOrigins = [
-    process.env.FRONTEND_URL || "http://localhost:5173",
-    "https://goldman-capital.vercel.app"
-];
+// ALLOWED_ORIGINS env var supports comma-separated values (e.g., "http://localhost:5173,https://goldman-capital.vercel.app")
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
+    .split(",")
+    .map(origin => origin.trim());
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl)
