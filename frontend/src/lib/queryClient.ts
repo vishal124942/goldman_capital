@@ -73,8 +73,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
     async ({ queryKey }) => {
-      const url = queryKey.join("/") as string;
-      const fullUrl = url.startsWith("/") ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+      // Construct the path from queryKey
+      const path = queryKey.join("/") as string;
+      // Ensure the path starts with /api if it doesn't already have a protocol
+      const fullUrl = path.startsWith("http") ? path : `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+
+      console.log("[QueryFn] Fetching:", fullUrl); // Debug log
+
       const res = await fetch(fullUrl, {
         credentials: "include",
       });
