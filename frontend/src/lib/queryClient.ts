@@ -35,7 +35,20 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+const getApiBaseUrl = () => {
+  // Check for VITE_API_URL in import.meta.env (Vite standard)
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  // Check for VITE_API_URL in process.env (fallback/older setups)
+  if (typeof process !== "undefined" && process.env?.VITE_API_URL) return process.env.VITE_API_URL;
+  return "";
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Debug log to help verify the backend URL in production
+if (import.meta.env.PROD) {
+  console.log("Connected to Backend:", API_BASE_URL || "Local Proxy (Relative Path)");
+}
 
 export async function apiRequest(
   method: string,
