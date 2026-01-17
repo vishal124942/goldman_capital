@@ -13,8 +13,20 @@ const app = express();
 const httpServer = createServer(app);
 
 // CORS configuration for frontend
+const allowedOrigins = [
+    process.env.FRONTEND_URL || "http://localhost:5173",
+    "https://goldman-capital.vercel.app"
+];
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,  // Allow cookies
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
