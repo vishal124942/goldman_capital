@@ -16,8 +16,9 @@ const sessionSchema = new Schema<ISession>({
 
 export const Session = mongoose.model<ISession>("Session", sessionSchema);
 
-export interface IUser extends Document {
+export interface IUser {
     _id: string;
+    id?: string;
     email?: string;
     phone?: string;
     password?: string;
@@ -63,8 +64,9 @@ export const Otp = mongoose.model<IOtp>("Otp", otpSchema);
 
 // ==================== BUSINESS MODELS ====================
 
-export interface IInvestorProfile extends Document {
+export interface IInvestorProfile {
     _id: string;
+    id?: string;
     userId?: string;
     firstName?: string;
     lastName?: string;
@@ -103,8 +105,9 @@ const investorProfileSchema = new Schema<IInvestorProfile>({
 
 export const InvestorProfile = mongoose.model<IInvestorProfile>("InvestorProfile", investorProfileSchema);
 
-export interface IAdminUser extends Document {
+export interface IAdminUser {
     _id: string;
+    id?: string;
     userId: string;
     role: string;
     permissions: string[];
@@ -123,8 +126,9 @@ const adminUserSchema = new Schema<IAdminUser>({
 
 export const AdminUser = mongoose.model<IAdminUser>("AdminUser", adminUserSchema);
 
-export interface IPortfolio extends Document {
+export interface IPortfolio {
     _id: string;
+    id?: string;
     investorId: string;
     fundName: string;
     totalInvested: string;
@@ -157,8 +161,9 @@ const portfolioSchema = new Schema<IPortfolio>({
 
 export const Portfolio = mongoose.model<IPortfolio>("Portfolio", portfolioSchema);
 
-export interface ITransaction extends Document {
+export interface ITransaction {
     _id: string;
+    id?: string;
     investorId: string;
     portfolioId: string;
     type: string;
@@ -188,8 +193,9 @@ const transactionSchema = new Schema<ITransaction>({
 
 export const Transaction = mongoose.model<ITransaction>("Transaction", transactionSchema);
 
-export interface IStatement extends Document {
+export interface IStatement {
     _id: string;
+    id?: string;
     investorId: string;
     type: string;
     period: string;
@@ -223,8 +229,9 @@ const statementSchema = new Schema<IStatement>({
 
 export const Statement = mongoose.model<IStatement>("Statement", statementSchema);
 
-export interface IAnnouncement extends Document {
+export interface IAnnouncement {
     _id: string;
+    id?: string;
     title: string;
     content: string;
     type: string;
@@ -253,8 +260,9 @@ const announcementSchema = new Schema<IAnnouncement>({
 
 export const Announcement = mongoose.model<IAnnouncement>("Announcement", announcementSchema);
 
-export interface ISupportRequest extends Document {
+export interface ISupportRequest {
     _id: string;
+    id?: string;
     investorId: string;
     type: string;
     subject: string;
@@ -281,8 +289,9 @@ const supportRequestSchema = new Schema<ISupportRequest>({
 
 export const SupportRequest = mongoose.model<ISupportRequest>("SupportRequest", supportRequestSchema);
 
-export interface ILeadCapture extends Document {
+export interface ILeadCapture {
     _id: string;
+    id?: string;
     name: string;
     email: string;
     phone?: string;
@@ -308,8 +317,9 @@ const leadCaptureSchema = new Schema<ILeadCapture>({
 
 export const LeadCapture = mongoose.model<ILeadCapture>("LeadCapture", leadCaptureSchema);
 
-export interface IPerformanceHistory extends Document {
+export interface IPerformanceHistory {
     _id: string;
+    id?: string;
     portfolioId: string;
     date: Date;
     value: string;
@@ -331,8 +341,9 @@ const performanceHistorySchema = new Schema<IPerformanceHistory>({
 
 export const PerformanceHistory = mongoose.model<IPerformanceHistory>("PerformanceHistory", performanceHistorySchema);
 
-export interface INavHistory extends Document {
+export interface INavHistory {
     _id: string;
+    id?: string;
     date: Date;
     nav: string;
     aum: string;
@@ -348,8 +359,9 @@ const navHistorySchema = new Schema<INavHistory>({
 
 export const NavHistory = mongoose.model<INavHistory>("NavHistory", navHistorySchema);
 
-export interface IReturnsHistory extends Document {
+export interface IReturnsHistory {
     _id: string;
+    id?: string;
     period: string;
     year: number;
     month?: number;
@@ -374,8 +386,9 @@ const returnsHistorySchema = new Schema<IReturnsHistory>({
 
 export const ReturnsHistory = mongoose.model<IReturnsHistory>("ReturnsHistory", returnsHistorySchema);
 
-export interface INotification extends Document {
+export interface INotification {
     _id: string;
+    id?: string;
     investorId: string;
     title: string;
     message: string;
@@ -397,8 +410,9 @@ const notificationSchema = new Schema<INotification>({
 
 export const Notification = mongoose.model<INotification>("Notification", notificationSchema);
 
-export interface IAllocation extends Document {
+export interface IAllocation {
     _id: string;
+    id?: string;
     portfolioId: string;
     assetClass: string;
     assetName?: string;
@@ -423,8 +437,9 @@ const allocationSchema = new Schema<IAllocation>({
 
 export const Allocation = mongoose.model<IAllocation>("Allocation", allocationSchema);
 
-export interface IActivityLog extends Document {
+export interface IActivityLog {
     _id: string;
+    id?: string;
     userId: string;
     action: string;
     resource: string;
@@ -448,8 +463,9 @@ const activityLogSchema = new Schema<IActivityLog>({
 
 export const ActivityLog = mongoose.model<IActivityLog>("ActivityLog", activityLogSchema);
 
-export interface ISystemSetting extends Document {
+export interface ISystemSetting {
     _id: string;
+    id?: string;
     key: string;
     value: string;
     category: string;

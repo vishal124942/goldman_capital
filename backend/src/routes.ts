@@ -359,7 +359,7 @@ export async function registerRoutes(
   app.get("/api/investor/statements/:id/download", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const statement = await storage.getStatementById(req.params.id);
+      const statement = await storage.getStatementById(req.params.id as string);
 
       if (!statement || statement.investorId !== investorProfile.id) {
         return res.status(404).json({ message: "Statement not found" });
@@ -416,7 +416,7 @@ export async function registerRoutes(
   app.put("/api/investor/requests/:id", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const existing = await storage.getSupportRequestById(req.params.id);
+      const existing = await storage.getSupportRequestById(req.params.id as string);
 
       if (!existing || existing.investorId !== investorProfile.id) {
         return res.status(404).json({ message: "Request not found" });
@@ -427,7 +427,7 @@ export async function registerRoutes(
       });
 
       const data = schema.parse(req.body);
-      const updated = await storage.updateSupportRequest(req.params.id, data);
+      const updated = await storage.updateSupportRequest(req.params.id as string, data);
       res.json(updated);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -489,7 +489,7 @@ export async function registerRoutes(
 
   app.put("/api/investor/notifications/:id/read", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
-      await storage.markNotificationRead(req.params.id);
+      await storage.markNotificationRead(req.params.id as string);
       res.json({ success: true });
     } catch (error) {
       console.error("Mark notification read error:", error);
@@ -550,7 +550,7 @@ export async function registerRoutes(
 
   app.put("/api/admin/support-requests/:id/status", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const { status } = req.body;
 
       if (!["open", "resolved", "closed", "pending"].includes(status)) {
@@ -707,7 +707,7 @@ export async function registerRoutes(
 
   app.get("/api/admin/investors/:id", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const investor = await storage.getInvestorProfileById(req.params.id);
+      const investor = await storage.getInvestorProfileById(req.params.id as string);
       if (!investor) {
         return res.status(404).json({ message: "Investor not found" });
       }
@@ -733,7 +733,7 @@ export async function registerRoutes(
       });
 
       const data = schema.parse(req.body);
-      const updated = await storage.updateInvestorProfile(req.params.id, data);
+      const updated = await storage.updateInvestorProfile(req.params.id as string, data);
 
       if (!updated) {
         return res.status(404).json({ message: "Investor not found" });
@@ -751,7 +751,7 @@ export async function registerRoutes(
 
   app.delete("/api/admin/investors/:id", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      await storage.deleteInvestorProfile(req.params.id);
+      await storage.deleteInvestorProfile(req.params.id as string);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete investor error:", error);
@@ -813,7 +813,7 @@ export async function registerRoutes(
 
   app.post("/api/admin/investors/:id/send-credentials", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const investor = await storage.getInvestorProfileById(req.params.id);
+      const investor = await storage.getInvestorProfileById(req.params.id as string);
       if (!investor) {
         return res.status(404).json({ message: "Investor not found" });
       }
@@ -846,7 +846,7 @@ export async function registerRoutes(
 
   app.put("/api/admin/transactions/:id/verify", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const updated = await storage.updateTransaction(req.params.id, { status: "verified" });
+      const updated = await storage.updateTransaction(req.params.id as string, { status: "verified" });
       if (!updated) {
         return res.status(404).json({ message: "Transaction not found" });
       }
@@ -859,7 +859,7 @@ export async function registerRoutes(
 
   app.put("/api/admin/transactions/:id/process", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const updated = await storage.updateTransaction(req.params.id, {
+      const updated = await storage.updateTransaction(req.params.id as string, {
         status: "processed",
         processedAt: new Date(),
       });
@@ -1088,7 +1088,7 @@ export async function registerRoutes(
 
   app.delete("/api/admin/statements/:id", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      await storage.deleteStatement(req.params.id);
+      await storage.deleteStatement(req.params.id as string);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete statement error:", error);
@@ -1100,7 +1100,7 @@ export async function registerRoutes(
   app.get("/api/statements/:id/download", isAuthenticated, async (req: Request, res: Response) => {
     try {
       console.log(`[Download] Request for statement ${req.params.id}`);
-      const statement = await storage.getStatementById(req.params.id);
+      const statement = await storage.getStatementById(req.params.id as string);
 
       if (!statement) {
         console.error(`[Download] Statement ${req.params.id} not found in DB`);
@@ -1190,7 +1190,7 @@ export async function registerRoutes(
       });
 
       const data = schema.parse(req.body);
-      const updated = await storage.updateNavHistory(req.params.id, data);
+      const updated = await storage.updateNavHistory(req.params.id as string, data);
 
       if (!updated) {
         return res.status(404).json({ message: "NAV entry not found" });
@@ -1250,7 +1250,7 @@ export async function registerRoutes(
       });
 
       const data = schema.parse(req.body);
-      const updated = await storage.updateReturnsHistory(req.params.id, data);
+      const updated = await storage.updateReturnsHistory(req.params.id as string, data);
 
       if (!updated) {
         return res.status(404).json({ message: "Returns entry not found" });
@@ -1322,7 +1322,7 @@ export async function registerRoutes(
       });
 
       const data = schema.parse(req.body);
-      const updated = await storage.updateAnnouncement(req.params.id, data);
+      const updated = await storage.updateAnnouncement(req.params.id as string, data);
 
       if (!updated) {
         return res.status(404).json({ message: "Announcement not found" });
@@ -1340,7 +1340,7 @@ export async function registerRoutes(
 
   app.delete("/api/admin/announcements/:id", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      await storage.deleteAnnouncement(req.params.id);
+      await storage.deleteAnnouncement(req.params.id as string);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete announcement error:", error);
@@ -1350,7 +1350,7 @@ export async function registerRoutes(
 
   app.post("/api/admin/announcements/:id/publish", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const updated = await storage.updateAnnouncement(req.params.id, {
+      const updated = await storage.updateAnnouncement(req.params.id as string, {
         isActive: true,
         publishedAt: new Date(),
       });
@@ -1581,7 +1581,7 @@ export async function registerRoutes(
       });
 
       const data = schema.parse(req.body);
-      const updated = await storage.updateAdminUser(req.params.id, data);
+      const updated = await storage.updateAdminUser(req.params.id as string, data);
 
       if (!updated) {
         return res.status(404).json({ message: "User not found" });
@@ -1599,7 +1599,7 @@ export async function registerRoutes(
 
   app.delete("/api/superadmin/users/:id", isAuthenticated, requireSuperAdmin, async (req: Request, res: Response) => {
     try {
-      await storage.deleteAdminUser(req.params.id);
+      await storage.deleteAdminUser(req.params.id as string);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete superadmin user error:", error);
@@ -1662,7 +1662,7 @@ export async function registerRoutes(
     try {
       const user = (req as any).user;
       const userId = user.id;
-      const key = req.params.key;
+      const key = req.params.key as string;
 
       const schema = z.object({
         value: z.any(),
@@ -1768,7 +1768,7 @@ export async function registerRoutes(
         permissions = ["all"];
       }
 
-      const updated = await storage.updateAdminUser(req.params.id, {
+      const updated = await storage.updateAdminUser(req.params.id as string, {
         ...data,
         permissions,
       });
@@ -1789,7 +1789,7 @@ export async function registerRoutes(
 
   app.delete("/api/superadmin/users/:id", isAuthenticated, requireSuperAdmin, async (req: Request, res: Response) => {
     try {
-      await storage.deleteAdminUser(req.params.id);
+      await storage.deleteAdminUser(req.params.id as string);
       res.json({ message: "Admin user removed successfully" });
     } catch (error) {
       console.error("Delete admin user error:", error);
