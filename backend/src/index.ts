@@ -10,6 +10,7 @@ dotenv.config();
 import { registerRoutes } from "./routes.js";
 
 const app = express();
+app.set("trust proxy", 1); // Trust first proxy (Render/Vercel)
 const httpServer = createServer(app);
 
 // CORS configuration for frontend

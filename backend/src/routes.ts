@@ -115,6 +115,7 @@ export async function registerRoutes(
       res.cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
@@ -348,9 +349,9 @@ export async function registerRoutes(
 
       // 1. Check if content is stored directly in DB (Buffer)
       if (statement.fileContent) {
-         res.setHeader("Content-Type", "application/pdf");
-         res.setHeader("Content-Disposition", `attachment; filename="${statement.fileName}"`);
-         return res.send(statement.fileContent);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="${statement.fileName}"`);
+        return res.send(statement.fileContent);
       }
 
       // 2. Check for local file
@@ -359,18 +360,18 @@ export async function registerRoutes(
       const fs = require('fs');
       const path = require('path');
       const STATEMENTS_DIR = path.join(process.cwd(), "statements");
-      
+
       const filePath = path.join(STATEMENTS_DIR, statement.fileName);
 
       if (fs.existsSync(filePath)) {
-          return res.download(filePath, statement.fileName);
+        return res.download(filePath, statement.fileName);
       }
 
       // 3. Fallback: Check if fileUrl is actually a public URL (e.g. S3)
       if (statement.fileUrl && statement.fileUrl.startsWith("http")) {
-          return res.redirect(statement.fileUrl);
+        return res.redirect(statement.fileUrl);
       }
-      
+
       console.error("File found in DB record but not on disk:", filePath);
       return res.status(404).json({ message: "File not found on server" });
 
@@ -522,11 +523,11 @@ export async function registerRoutes(
     try {
       const user = (req as any).user;
       const investorProfile = await storage.getInvestorProfile(user.id);
-      
+
       if (!investorProfile) {
         return res.json([]);
       }
-      
+
       const requests = await storage.getSupportRequests(investorProfile._id);
       res.json(requests);
     } catch (error) {
@@ -539,14 +540,14 @@ export async function registerRoutes(
     try {
       const investorProfile = (req as any).investorProfile;
       const announcements = await storage.getActiveAnnouncements();
-      
-     // Mark all active announcements as read for this investor
+
+      // Mark all active announcements as read for this investor
       await Promise.all(
-        announcements.map(announcement => 
+        announcements.map(announcement =>
           storage.markAnnouncementAsRead(announcement._id, investorProfile._id)
         )
       );
-      
+
       res.json({ success: true });
     } catch (error) {
       console.error("Mark all announcements read error:", error);
@@ -1297,11 +1298,11 @@ export async function registerRoutes(
   app.post("/api/admin/statements/download-filtered", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
       const { type, period, year, investorId } = req.body;
-      
+
       console.log("[Bulk Download] Request with filters:", { type, period, year, investorId });
 
       const allStatements = await storage.getAllStatements();
-      
+
       // Filter statements
       const filteredStatements = allStatements.filter(s => {
         let match = true;
@@ -1328,16 +1329,16 @@ export async function registerRoutes(
       for (const statement of filteredStatements) {
         if (statement.fileContent) {
           let content = statement.fileContent;
-          
+
           // Ensure content is a Buffer
           if (!Buffer.isBuffer(content)) {
-             if (content && typeof content === 'object' && 'buffer' in content && Buffer.isBuffer((content as any).buffer)) {
-               content = (content as any).buffer;
-             } else {
-               content = Buffer.from(content as any);
-             }
+            if (content && typeof content === 'object' && 'buffer' in content && Buffer.isBuffer((content as any).buffer)) {
+              content = (content as any).buffer;
+            } else {
+              content = Buffer.from(content as any);
+            }
           }
-          
+
           zip.file(statement.fileName, content);
           fileCount++;
         }
@@ -1349,7 +1350,7 @@ export async function registerRoutes(
 
       // Generate ZIP buffer
       const zipContent = await zip.generateAsync({ type: "nodebuffer" });
-      
+
       const zipFileName = `statements_${type || 'all'}_${period || 'all'}_${year || 'all'}.zip`;
 
       res.setHeader("Content-Type", "application/zip");
@@ -1596,7 +1597,7 @@ export async function registerRoutes(
   app.get("/api/investor/statements", isAuthenticated, async (req: Request, res: Response) => {
     try {
       const user = (req as any).user;
-      
+
       console.log("DEBUG: fetching statements for user", user.id);
       const investorProfile = await storage.getInvestorProfile(user.id);
 
@@ -1604,11 +1605,11 @@ export async function registerRoutes(
         console.log("DEBUG: Investor profile NOT found for user", user.id);
         return res.json([]);
       }
-      
+
       console.log("DEBUG: Found Investor Profile:", investorProfile._id);
       const statements = await storage.getStatements(investorProfile._id);
       console.log("DEBUG: storage.getStatements returned count:", statements.length);
-      
+
       res.json(statements);
     } catch (error) {
       console.error("Get investor statements error:", error);
