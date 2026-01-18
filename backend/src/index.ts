@@ -22,11 +22,24 @@ app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
+
+        // Exact match
         if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
+            return callback(null, true);
         }
+
+        // Dynamic match for Vercel preview deployments
+        if (origin.endsWith(".vercel.app")) {
+            return callback(null, true);
+        }
+
+        // Dynamic match for Localhost (any port)
+        if (origin.startsWith("http://localhost:")) {
+            return callback(null, true);
+        }
+
+        console.log("CORS blocked:", origin);
+        callback(new Error("Not allowed by CORS"));
     },
     credentials: true,  // Allow cookies
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
