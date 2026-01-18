@@ -8,46 +8,31 @@ interface UserRole {
   isSuperAdmin: boolean;
 }
 
+import { apiRequest } from "@/lib/queryClient";
+
 async function fetchUser(): Promise<User | null> {
-  const response = await fetch("/api/auth/user", {
-    credentials: "include",
-  });
-
-  if (response.status === 401) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
-  }
-
+  const response = await apiRequest("GET", "/api/auth/user");
   return response.json();
 }
 
 async function fetchUserRole(): Promise<UserRole | null> {
-  const response = await fetch("/api/user/role", {
-    credentials: "include",
-  });
-
-  if (response.status === 401) {
+  // Use try-catch because apiRequest throws on non-2xx
+  try {
+    const response = await apiRequest("GET", "/api/user/role");
+    return response.json();
+  } catch (e) {
     return null;
   }
-
-  if (!response.ok) {
-    return null;
-  }
-
-  return response.json();
 }
 
 async function logout(): Promise<void> {
-  await fetch("/api/logout", { method: "POST" });
+  await apiRequest("POST", "/api/logout");
   window.location.href = "/";
 }
 
 export function useAuth() {
   const queryClient = useQueryClient();
-  
+
   const { data: user, isLoading: isUserLoading, error } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     queryFn: fetchUser,
