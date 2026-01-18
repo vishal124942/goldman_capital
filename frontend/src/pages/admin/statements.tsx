@@ -231,11 +231,15 @@ export default function AdminStatementsPage() {
     setIsDownloadingFiltered(true);
 
     try {
-      const response = await fetch("/api/admin/statements/download-filtered", {
+      const downloadPath = "/api/admin/statements/download-filtered";
+      const fullUrl = API_BASE_URL ? `${API_BASE_URL.replace(/\/$/, "")}${downloadPath}` : downloadPath;
+
+      const response = await fetch(fullUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           investorId: selectedInvestor || undefined,
           type: selectedType || undefined,
@@ -602,7 +606,10 @@ export default function AdminStatementsPage() {
                                 >
                                   {statement.fileUrl ? (
                                     <a
-                                      href={`${API_BASE_URL}${statement.fileUrl}`}
+                                      href={statement.fileUrl.startsWith('http')
+                                        ? statement.fileUrl
+                                        : `${API_BASE_URL.replace(/\/$/, "")}${statement.fileUrl.startsWith('/') ? '' : '/'}${statement.fileUrl}`
+                                      }
                                       download
                                       target="_blank"
                                       rel="noopener noreferrer"

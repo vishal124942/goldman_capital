@@ -122,7 +122,7 @@ export function StatementList({ statements, isLoading }: StatementListProps) {
             </div>
             <Button variant="ghost" size="sm" asChild>
               <a
-                href={`${API_BASE_URL}/api/investor/statements/${(statement as any)._id || (statement as any).id}/download`}
+                href={`${API_BASE_URL.replace(/\/$/, "")}/api/statements/${(statement as any)._id || (statement as any).id}/download`}
                 download
                 target="_blank"
                 rel="noreferrer"
