@@ -43,7 +43,7 @@ const getApiBaseUrl = () => {
   return "";
 };
 
-const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl();
 
 // Debug log to help verify the backend URL in production
 if (import.meta.env.PROD) {

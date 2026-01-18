@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Calendar } from "lucide-react";
 import type { Statement } from "@shared/schema";
+import { API_BASE_URL } from "@/lib/queryClient";
 
 interface StatementListProps {
   statements: Statement[];
@@ -120,9 +121,9 @@ export function StatementList({ statements, isLoading }: StatementListProps) {
               </div>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <a 
-                href={`/api/investor/statements/${(statement as any)._id || (statement as any).id}/download`} 
-                download 
+              <a
+                href={`${API_BASE_URL}/api/investor/statements/${(statement as any)._id || (statement as any).id}/download`}
+                download
                 target="_blank"
                 rel="noreferrer"
                 data-testid={`button-download-statement-${(statement as any)._id || (statement as any).id}`}

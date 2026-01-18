@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, API_BASE_URL } from "@/lib/queryClient";
 import { FileText, Upload, Download, Loader2, Users } from "lucide-react";
 import type { Statement, InvestorProfile } from "@shared/schema";
 
@@ -222,7 +222,7 @@ export default function AdminStatementsPage() {
       toast({
         title: "No Filters Selected",
         description: "Please select at least one filter (Type, Period, Year, or Investor) or download all.",
-        variant: "default", 
+        variant: "default",
       });
       // Allow proceeding even without filters to download everything, just a warning or info might be enough, 
       // but let's proceed to allow "Download All" if nothing selected.
@@ -253,7 +253,7 @@ export default function AdminStatementsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      
+
       // Try to get filename from header
       const contentDisposition = response.headers.get("Content-Disposition");
       let fileName = "statements.zip";
@@ -263,7 +263,7 @@ export default function AdminStatementsPage() {
           fileName = matches[1];
         }
       }
-      
+
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
@@ -602,7 +602,7 @@ export default function AdminStatementsPage() {
                                 >
                                   {statement.fileUrl ? (
                                     <a
-                                      href={statement.fileUrl}
+                                      href={`${API_BASE_URL}${statement.fileUrl}`}
                                       download
                                       target="_blank"
                                       rel="noopener noreferrer"
