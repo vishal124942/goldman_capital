@@ -11,3 +11,4 @@ backend/.env
 frontend/.env
 *.xlsx
 *.pdf
+*.txt

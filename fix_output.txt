@@ -1,9 +1,0 @@
-Connected to MongoDB via Fix Script
-Found 1 investor(s) matching 'Anuj'
-------------------------------------------------
-Processing Investor: Anuj Investor (ID: b510839e-dd55-410c-93d1-1b79b2f604aa)
-Current userId: f0a0278a-124b-4034-8dfe-10e190629142
-Email: anujr3259@gmail.com
-Found matching User: f0a0278a-124b-4034-8dfe-10e190629142 (anujr3259@gmail.com)
-Linkage is already CORRECT.
-------------------------------------------------
