@@ -38,10 +38,12 @@ export async function generateStatementPDF(
   const fileUrl = `/statements/${fileName}`;
 
   // Use require directly with exhaustive fallback attempts
+  // Reference from working repo: require("pdfmake/src/printer")
   let PdfPrinter: any;
   const requirePaths = [
-    "pdfmake/js/Printer",
-    "pdfmake/src/Printer",
+    "pdfmake/src/printer", // Legacy/Mac path (matches reference repo)
+    "pdfmake/js/Printer",  // Compiled JS (Linux/Production preferred)
+    "pdfmake/src/Printer", // Source JS (Linux case-sensitive)
     "pdfmake",
     "pdfmake/build/pdfmake"
   ];
