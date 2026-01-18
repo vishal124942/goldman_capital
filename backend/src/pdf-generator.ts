@@ -37,15 +37,23 @@ export async function generateStatementPDF(
   const filePath = path.join(STATEMENTS_DIR, fileName);
   const fileUrl = `/statements/${fileName}`;
 
-  // Use require directly in CommonJS mode
+  // Use require directly with multiple fallback attempts
   let PdfPrinter;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const pdfMakeModule = require("pdfmake/src/printer");
-    console.log("Required pdfmake keys:", Object.keys(pdfMakeModule)); // DEBUG LOG
-    PdfPrinter = pdfMakeModule.default || pdfMakeModule; // Try default if available
-  } catch (e) {
-    console.error("Failed to load pdfmake:", e);
+    // Attempt 1: Standard server-side import
+    const pdfMake = require("pdfmake");
+    PdfPrinter = pdfMake.default || pdfMake;
+    console.log("pdfmake loaded via standard require");
+  } catch (e1) {
+    console.warn("Attempt 1 (require('pdfmake')) failed:", e1);
+    try {
+      // Attempt 2: Direct printer source path
+      const pdfMakeModule = require("pdfmake/src/printer");
+      PdfPrinter = pdfMakeModule.default || pdfMakeModule;
+      console.log("pdfmake loaded via pdfmake/src/printer");
+    } catch (e2) {
+      console.error("Attempt 2 (require('pdfmake/src/printer')) failed:", e2);
+    }
   }
 
   // Create PDF document definition
