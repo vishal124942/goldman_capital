@@ -37,23 +37,35 @@ export async function generateStatementPDF(
   const filePath = path.join(STATEMENTS_DIR, fileName);
   const fileUrl = `/statements/${fileName}`;
 
-  // Use require directly with multiple fallback attempts
-  let PdfPrinter;
-  try {
-    // Attempt 1: Standard server-side import
-    const pdfMake = require("pdfmake");
-    PdfPrinter = pdfMake.default || pdfMake;
-    console.log("pdfmake loaded via standard require");
-  } catch (e1) {
-    console.warn("Attempt 1 (require('pdfmake')) failed:", e1);
+  // Use require directly with exhaustive fallback attempts
+  let PdfPrinter: any;
+  const requirePaths = ["pdfmake/src/printer", "pdfmake", "pdfmake/build/pdfmake"];
+
+  for (const p of requirePaths) {
     try {
-      // Attempt 2: Direct printer source path
-      const pdfMakeModule = require("pdfmake/src/printer");
-      PdfPrinter = pdfMakeModule.default || pdfMakeModule;
-      console.log("pdfmake loaded via pdfmake/src/printer");
-    } catch (e2) {
-      console.error("Attempt 2 (require('pdfmake/src/printer')) failed:", e2);
+      const mod = require(p);
+      console.log(`Checking require('${p}'). Type: ${typeof mod}`);
+
+      // Try every common pattern
+      if (typeof mod === 'function') {
+        PdfPrinter = mod;
+      } else if (mod && typeof mod.default === 'function') {
+        PdfPrinter = mod.default;
+      } else if (mod && typeof mod.Printer === 'function') {
+        PdfPrinter = mod.Printer;
+      }
+
+      if (PdfPrinter) {
+        console.log(`Successfully loaded PdfPrinter from '${p}'`);
+        break;
+      }
+    } catch (e: any) {
+      console.warn(`Failed require('${p}'): ${e.message}`);
     }
+  }
+
+  if (!PdfPrinter) {
+    console.error("CRITICAL: All pdfmake loading attempts failed.");
   }
 
   // Create PDF document definition

@@ -1272,22 +1272,23 @@ export async function registerRoutes(
       const adminUser = await storage.getAdminUser(user.id);
       const isAdmin = !!adminUser;
 
-      // 2. Check if user is the Owner
-      // IMPORTANT: statement.investorId stores the _id of the InvestorProfile.
-      // user.id stores the _id of the User account. 
-      // We must fetch the InvestorProfile for this user to get their Profile _id for comparison.
+      // 2. Check Ownership
+      // Note: statement.investorId stores the Profile _id. 
+      // Current user is identified by user.id (the User Account _id).
       let isOwner = false;
       if (!isAdmin) {
-        const investorProfile = await storage.getInvestorProfile(user.id);
-        if (investorProfile && statement.investorId === investorProfile._id.toString()) {
+        const profile = await storage.getInvestorProfile(user.id);
+        const profileId = profile?._id?.toString();
+
+        console.log(`[Download] Auth Check - User: ${user.id}, Profile: ${profileId}, Statement Owner: ${statement.investorId}`);
+
+        if (profileId && statement.investorId === profileId) {
           isOwner = true;
-        } else {
-          console.log(`[Download] Owner check failed: Statement InvestorId(${statement.investorId}) !== Profile._id(${investorProfile?._id})`);
         }
       }
 
       if (!isAdmin && !isOwner) {
-        console.error(`[Download] Unauthorized. User ${user.id} tried to access statement for investor profile ${statement.investorId}`);
+        console.error(`[Download] Unauthorized: User ${user.id} tried to access statement for profile ${statement.investorId}`);
         return res.status(403).json({ message: "Unauthorized access to statement" });
       }
 
@@ -1306,7 +1307,7 @@ export async function registerRoutes(
         }
       }
 
-      console.log(`[Download] Sending PDF stream to client...`);
+      console.log(`[Download] Sending PDF content...`);
       res.send(content);
 
     } catch (error) {
