@@ -1116,54 +1116,50 @@ export async function registerRoutes(
       const results: any[] = [];
       const errors: any[] = [];
 
-      for (const row of data) {
+      // Optimization: Fetch all investors once and create maps for fast lookup
+      const allInvestorsList = await storage.getAllInvestors();
+      const investorIdMap = new Map();
+      const investorNameMap = new Map();
+
+      allInvestorsList.forEach(inv => {
+        const id = (inv as any)._id || inv.id;
+        investorIdMap.set(id, inv);
+
+        if (inv.firstName && inv.lastName) {
+          const fullName = `${inv.firstName} ${inv.lastName}`.toLowerCase().trim();
+          investorNameMap.set(fullName, inv);
+        }
+      });
+
+      console.log(`Initialized lookup maps with ${allInvestorsList.length} investors`);
+
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i];
         try {
           // Expected columns: investorId OR investorName, type, period, year
-          let investorId = row.investorId || row.investor_id || row.InvestorId;
+          const rawInvestorId = row.investorId || row.investor_id || row.InvestorId;
           const investorName = row.investorName || row.investor_name || row.InvestorName || row.name || row.Name;
-          const type = row.type || row.Type || "monthly";
+          const type = (row.type || row.Type || "monthly").toLowerCase();
           const period = row.period || row.Period || "January";
           const year = parseInt(row.year || row.Year || new Date().getFullYear());
 
           let investor = null;
 
-          // If investorId is provided, use it directly
-          if (investorId) {
-            investor = await storage.getInvestorProfileById(investorId);
+          // 1. Try Lookup by ID
+          if (rawInvestorId) {
+            investor = investorIdMap.get(rawInvestorId);
           }
-          // Otherwise, try to find investor by name
-          else if (investorName) {
-            const allInvestors = await storage.getAllInvestors();
-            const nameParts = investorName.trim().split(/\s+/);
 
-            if (nameParts.length >= 2) {
-              const firstName = nameParts[0].toLowerCase();
-              const lastName = nameParts.slice(1).join(" ").toLowerCase();
-
-              investor = allInvestors.find(inv =>
-                inv.firstName.toLowerCase() === firstName &&
-                inv.lastName.toLowerCase() === lastName
-              ) || null;
-            } else {
-              // Try to match by first name or last name alone
-              const searchName = nameParts[0].toLowerCase();
-              investor = allInvestors.find(inv =>
-                inv.firstName.toLowerCase() === searchName ||
-                inv.lastName.toLowerCase() === searchName
-              ) || null;
-            }
-
-            if (investor) {
-              investorId = (investor as any)._id || investor.id;
-            }
+          // 2. Try Lookup by Name if ID failed
+          if (!investor && investorName) {
+            investor = investorNameMap.get(investorName.toLowerCase().trim());
           }
 
           if (!investor) {
-            errors.push({ row, error: `Investor not found: ${investorName || investorId || "No name/ID provided"}` });
-            continue;
+            throw new Error(`Investor details not matched (ID: ${rawInvestorId || 'N/A'}, Name: ${investorName || 'N/A'})`);
           }
 
-          investorId = investorId || (investor as any)._id || investor.id;
+          const investorId = (investor as any)._id || investor.id;
 
           // Get portfolio data
           const portfolio = await storage.getPortfolio(investorId);
@@ -1263,22 +1259,42 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Statement file content missing" });
       }
 
-      console.log(`[Download] Statement found. Size: ${statement.fileContent.length} bytes`);
+      console.log(`[Download] Statement found. Size: ${statement.fileContent.length} bytes. Name: ${statement.fileName}`);
 
       // Check authorization
       const user = (req as any).user;
+      if (!user) {
+        console.error(`[Download] No user found in request`);
+        return res.status(401).json({ message: "Authentication required" });
+      }
 
-      // Verify admin status from DB to be consistent with middleware
+      // 1. Check if user is Admin (Admins can download any statement)
       const adminUser = await storage.getAdminUser(user.id);
       const isAdmin = !!adminUser;
 
-      if (!isAdmin && statement.investorId !== user.id) {
-        console.error(`[Download] Unauthorized access. User ${user.id} tried to access statement for ${statement.investorId}`);
+      // 2. Check if user is the Owner
+      // IMPORTANT: statement.investorId stores the _id of the InvestorProfile.
+      // user.id stores the _id of the User account. 
+      // We must fetch the InvestorProfile for this user to get their Profile _id for comparison.
+      let isOwner = false;
+      if (!isAdmin) {
+        const investorProfile = await storage.getInvestorProfile(user.id);
+        if (investorProfile && statement.investorId === investorProfile._id.toString()) {
+          isOwner = true;
+        } else {
+          console.log(`[Download] Owner check failed: Statement InvestorId(${statement.investorId}) !== Profile._id(${investorProfile?._id})`);
+        }
+      }
+
+      if (!isAdmin && !isOwner) {
+        console.error(`[Download] Unauthorized. User ${user.id} tried to access statement for investor profile ${statement.investorId}`);
         return res.status(403).json({ message: "Unauthorized access to statement" });
       }
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `attachment; filename="${statement.fileName}"`);
+      // Expose header for cross-origin downloads
+      res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
 
       let content = statement.fileContent;
       if (!Buffer.isBuffer(content)) {
@@ -1290,11 +1306,12 @@ export async function registerRoutes(
         }
       }
 
+      console.log(`[Download] Sending PDF stream to client...`);
       res.send(content);
 
     } catch (error) {
       console.error("Download statement error:", error);
-      res.status(500).json({ message: "Failed to download statement" });
+      res.status(500).json({ message: "Failed to download statement", error: String(error) });
     }
   });
 

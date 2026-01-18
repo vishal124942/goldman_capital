@@ -67,7 +67,10 @@ export default function AdminStatementsPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/admin/statements/upload", {
+      const uploadPath = "/api/admin/statements/upload";
+      const fullUrl = API_BASE_URL ? `${API_BASE_URL.replace(/\/$/, "")}${uploadPath}` : uploadPath;
+
+      const response = await fetch(fullUrl, {
         method: "POST",
         body: formData,
         credentials: "include",
