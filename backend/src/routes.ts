@@ -60,30 +60,39 @@ export async function registerRoutes(
   // Authentication Routes
   app.post("/api/login", async (req: Request, res: Response) => {
     try {
+      console.log("[LOGIN] Request received");
       const { email, password } = req.body;
 
       if (!email || !email.includes("@")) {
+        console.log("[LOGIN] Invalid email format");
         return res.status(400).json({ message: "Valid email is required" });
       }
 
+      console.log("[LOGIN] Looking up user:", email);
       const user = await storage.getUserByEmail(email);
 
       if (!user || !user.password) {
+        console.log("[LOGIN] User not found or no password");
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      console.log("[LOGIN] Comparing password");
       const isPasswordValid = await comparePassword(password, user.password);
       if (!isPasswordValid) {
+        console.log("[LOGIN] Password mismatch");
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const userId = (user as any)._id || (user as any).id;
+      console.log("[LOGIN] Generating OTP for userId:", userId);
       await generateAndSendOtp(userId, email, "email");
 
+      console.log("[LOGIN] OTP sent successfully");
       res.json({ message: "OTP sent successfully", tempUserId: userId });
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Failed to login" });
+    } catch (error: any) {
+      console.error("[LOGIN] CRITICAL ERROR:", error.message);
+      console.error("[LOGIN] Stack trace:", error.stack);
+      res.status(500).json({ message: "Failed to login", details: error.message });
     }
   });
 
