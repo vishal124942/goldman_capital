@@ -39,7 +39,12 @@ export async function generateStatementPDF(
 
   // Use require directly with exhaustive fallback attempts
   let PdfPrinter: any;
-  const requirePaths = ["pdfmake/src/printer", "pdfmake", "pdfmake/build/pdfmake"];
+  const requirePaths = [
+    "pdfmake/js/Printer",
+    "pdfmake/src/Printer",
+    "pdfmake",
+    "pdfmake/build/pdfmake"
+  ];
 
   for (const p of requirePaths) {
     try {
