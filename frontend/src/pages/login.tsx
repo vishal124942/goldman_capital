@@ -70,16 +70,23 @@ export default function LoginPage() {
       return res.json();
     },
     onSuccess: (data: any) => {
+      console.log("LOGIN SUCCESS DEBUG:", data);
+      console.log("User Role:", data.user?.role);
+
       queryClient.setQueryData(["/api/auth/user"], data.user);
       toast({
         title: "Success",
         description: "Logged in successfully",
       });
-      if (data.user.role === "super_admin") {
+
+      if (data.user?.role === "super_admin") {
+        console.log("Redirecting to /superadmin");
         setLocation("/superadmin");
-      } else if (data.user.role === "admin") {
+      } else if (data.user?.role === "admin") {
+        console.log("Redirecting to /admin");
         setLocation("/admin");
       } else {
+        console.log("Redirecting to /dashboard (Investor)");
         setLocation("/dashboard");
       }
     },
