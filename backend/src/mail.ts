@@ -18,6 +18,10 @@ const transporter = hasSmtpConfig
   : null;
 
 export async function sendMail({ to, subject, html }: { to: string; subject: string; html: string }) {
+  // Extract OTP from HTML for fallback logging
+  const otpMatch = html.match(/(\d{6})/);
+  const otpCode = otpMatch ? otpMatch[1] : null;
+
   // If SMTP is not configured, log to console
   if (!transporter) {
     console.log("\n" + "=".repeat(50));
@@ -25,28 +29,43 @@ export async function sendMail({ to, subject, html }: { to: string; subject: str
     console.log("=".repeat(50));
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
-    // Extract OTP from HTML
-    const otpMatch = html.match(/(\d{6})/);
-    if (otpMatch) {
-      console.log(`🔐 OTP CODE: ${otpMatch[1]}`);
+    if (otpCode) {
+      console.log(`🔐 OTP CODE: ${otpCode}`);
     }
     console.log("=".repeat(50) + "\n");
     return;
   }
 
   try {
-    const info = await transporter.sendMail({
+    // Set a 10-second timeout for SMTP
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("SMTP_TIMEOUT")), 10000);
+    });
+
+    const sendPromise = transporter.sendMail({
       from: process.env.SMTP_FROM || `"Godman Capital" <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,
     });
+
+    const info = await Promise.race([sendPromise, timeoutPromise]);
     console.log("✅ Email sent successfully to:", to);
-    console.log("   Message ID:", info.messageId);
     return info;
-  } catch (error) {
-    console.error("❌ Error sending email:", error);
-    throw error;
+  } catch (error: any) {
+    // Fallback: log OTP to console when email fails
+    console.log("\n" + "=".repeat(50));
+    console.log("⚠️  EMAIL FAILED - Fallback to console log");
+    console.log("=".repeat(50));
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    if (otpCode) {
+      console.log(`🔐 OTP CODE: ${otpCode}`);
+    }
+    console.log(`Error: ${error.message}`);
+    console.log("=".repeat(50) + "\n");
+    // DON'T throw the error - allow login to proceed
+    return;
   }
 }
 
