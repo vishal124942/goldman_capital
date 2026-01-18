@@ -89,6 +89,8 @@ export interface IStorage {
   createAnnouncement(announcement: Partial<IAnnouncement>): Promise<IAnnouncement>;
   updateAnnouncement(id: string, announcement: Partial<IAnnouncement>): Promise<IAnnouncement | null>;
   deleteAnnouncement(id: string): Promise<void>;
+  markAnnouncementAsRead(announcementId: string, investorId: string): Promise<void>;
+  getUnreadAnnouncementCount(investorId: string): Promise<number>;
 
   // Support request methods
   getSupportRequests(investorId: string): Promise<ISupportRequest[]>;
@@ -333,6 +335,26 @@ class MongoStorage implements IStorage {
 
   async deleteAnnouncement(id: string): Promise<void> {
     await Announcement.findByIdAndDelete(id);
+  }
+
+  async markAnnouncementAsRead(announcementId: string, investorId: string): Promise<void> {
+    await Announcement.findByIdAndUpdate(
+      announcementId,
+      { $addToSet: { readBy: investorId } }, // Add investorId to readBy array if not already present
+      { new: true }
+    );
+  }
+
+  async getUnreadAnnouncementCount(investorId: string): Promise<number> {
+    const now = new Date();
+    return Announcement.countDocuments({
+      isActive: true,
+      readBy: { $ne: investorId }, // Not in readBy array
+      $or: [
+        { expiresAt: null },
+        { expiresAt: { $gt: now } }
+      ]
+    });
   }
 
   // ==================== SUPPORT REQUEST METHODS ====================

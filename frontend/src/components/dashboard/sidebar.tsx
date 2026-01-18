@@ -44,11 +44,13 @@ export function InvestorSidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
 
-  const { data: notifications } = useQuery<Notification[]>({
-    queryKey: ["/api/investor/notifications"],
+  // Fetch unread announcements count
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/investor/unread-announcements"],
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
-  const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
+  const unreadCount = unreadData?.count || 0;
 
   const initials = user
     ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"

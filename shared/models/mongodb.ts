@@ -231,6 +231,7 @@ export interface IAnnouncement extends Document {
     priority: string;
     targetAudience: string;
     isActive: boolean;
+    readBy: string[]; // Array of investor IDs who have read this announcement
     publishedAt?: Date;
     expiresAt?: Date;
     createdBy?: string;
@@ -246,6 +247,7 @@ const announcementSchema = new Schema<IAnnouncement>({
     priority: { type: String, required: true, default: "normal" },
     targetAudience: { type: String, required: true, default: "all" },
     isActive: { type: Boolean, default: true },
+    readBy: { type: [String], default: [] }, // Track investor IDs who have read
     publishedAt: { type: Date },
     expiresAt: { type: Date },
     createdBy: { type: String },

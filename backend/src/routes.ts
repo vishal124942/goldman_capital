@@ -506,6 +506,37 @@ export async function registerRoutes(
     }
   });
 
+  // Announcement read tracking for investors
+  app.get("/api/investor/unread-announcements", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
+    try {
+      const investorProfile = (req as any).investorProfile;
+      const count = await storage.getUnreadAnnouncementCount(investorProfile.id);
+      res.json({ count });
+    } catch (error) {
+      console.error("Get unread announcements count error:", error);
+      res.status(500).json({ message: "Failed to get unread announcements count" });
+    }
+  });
+
+  app.post("/api/investor/announcements/mark-all-read", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
+    try {
+      const investorProfile = (req as any).investorProfile;
+      const announcements = await storage.getActiveAnnouncements();
+      
+     // Mark all active announcements as read for this investor
+      await Promise.all(
+        announcements.map(announcement => 
+          storage.markAnnouncementAsRead(announcement._id, investorProfile.id)
+        )
+      );
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Mark all announcements read error:", error);
+      res.status(500).json({ message: "Failed to mark announcements as read" });
+    }
+  });
+
   // ==================== ADMIN ENDPOINTS ====================
 
   // Admin Notification Counts

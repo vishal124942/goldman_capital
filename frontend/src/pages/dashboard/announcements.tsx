@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { InvestorSidebar } from "@/components/dashboard/sidebar";
 import { AnnouncementList } from "@/components/dashboard/announcement-list";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { apiRequest } from "@/lib/queryClient";
 import type { Announcement } from "@shared/schema";
+import { useEffect } from "react";
 
 const mockAnnouncements: Announcement[] = [
   {
@@ -65,11 +67,32 @@ const mockAnnouncements: Announcement[] = [
 ];
 
 export default function AnnouncementsPage() {
+  const queryClient = useQueryClient();
+  
   const { data: announcements, isLoading } = useQuery<Announcement[]>({
     queryKey: ["/api/announcements"],
   });
 
   const displayAnnouncements = announcements || mockAnnouncements;
+
+  // Mark all announcements as read when page is viewed
+  const markAllReadMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/investor/announcements/mark-all-read", {});
+      return res.json();
+    },
+    onSuccess: () => {
+      // Invalidate unread count query to update badge
+      queryClient.invalidateQueries({ queryKey: ["/api/investor/unread-announcements"] });
+    },
+  });
+
+  // Auto-mark as read when page loads
+  useEffect(() => {
+    if (!isLoading && displayAnnouncements.length > 0) {
+      markAllReadMutation.mutate();
+    }
+  }, [isLoading]); // Only run once when data is loaded
 
   const sidebarStyle = {
     "--sidebar-width": "17rem",

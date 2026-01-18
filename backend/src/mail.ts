@@ -1,31 +1,23 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
-// Gmail SMTP configuration for sending OTP emails
-// Requires Gmail App Password (not regular password)
+// Resend configuration for sending OTP emails
+// More reliable than Gmail SMTP for production use
 
-const isProduction = process.env.NODE_ENV === "production";
-const hasSmtpConfig = process.env.SMTP_USER && process.env.SMTP_PASS;
+const resendApiKey = process.env.RESEND_API_KEY;
+const emailFrom = process.env.EMAIL_FROM || "Godman Capital <onboarding@resend.dev>";
 
-// Create transporter - uses Gmail SMTP if configured, else mock
-const transporter = hasSmtpConfig
-  ? nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  })
-  : null;
+// Create Resend client - only if API key is configured
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 export async function sendMail({ to, subject, html }: { to: string; subject: string; html: string }) {
   // Extract OTP from HTML for fallback logging
   const otpMatch = html.match(/(\d{6})/);
   const otpCode = otpMatch ? otpMatch[1] : null;
 
-  // If SMTP is not configured, log to console
-  if (!transporter) {
+  // If Resend is not configured, log to console
+  if (!resend) {
     console.log("\n" + "=".repeat(50));
-    console.log("📧 MOCK EMAIL (Configure SMTP for real emails)");
+    console.log("📧 MOCK EMAIL (Configure RESEND_API_KEY for real emails)");
     console.log("=".repeat(50));
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
@@ -37,21 +29,20 @@ export async function sendMail({ to, subject, html }: { to: string; subject: str
   }
 
   try {
-    // Set a 10-second timeout for SMTP
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("SMTP_TIMEOUT")), 10000);
-    });
-
-    const sendPromise = transporter.sendMail({
-      from: process.env.SMTP_FROM || `"Godman Capital" <${process.env.SMTP_USER}>`,
-      to,
+    const { data, error } = await resend.emails.send({
+      from: emailFrom,
+      to: [to],
       subject,
       html,
     });
 
-    const info = await Promise.race([sendPromise, timeoutPromise]);
+    if (error) {
+      throw new Error(error.message);
+    }
+
     console.log("✅ Email sent successfully to:", to);
-    return info;
+    console.log("📧 Email ID:", data?.id);
+    return data;
   } catch (error: any) {
     // Fallback: log OTP to console when email fails
     console.log("\n" + "=".repeat(50));
