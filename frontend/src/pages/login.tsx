@@ -75,7 +75,9 @@ export default function LoginPage() {
         title: "Success",
         description: "Logged in successfully",
       });
-      if (data.user.role === "admin" || data.user.role === "super_admin") {
+      if (data.user.role === "super_admin") {
+        setLocation("/superadmin");
+      } else if (data.user.role === "admin") {
         setLocation("/admin");
       } else {
         setLocation("/dashboard");

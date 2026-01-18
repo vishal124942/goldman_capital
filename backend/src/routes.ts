@@ -227,8 +227,8 @@ export async function registerRoutes(
   app.get("/api/investor/dashboard", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const portfolio = await storage.getPortfolio(investorProfile.id);
-      const recentTransactions = await storage.getTransactions(investorProfile.id);
+      const portfolio = await storage.getPortfolio(investorProfile._id);
+      const recentTransactions = await storage.getTransactions(investorProfile._id);
       const announcements = await storage.getActiveAnnouncements();
 
       res.json({
@@ -264,7 +264,7 @@ export async function registerRoutes(
       });
 
       const data = schema.parse(req.body);
-      const updated = await storage.updateInvestorProfile(investorProfile.id, data);
+      const updated = await storage.updateInvestorProfile(investorProfile._id, data);
       res.json(updated);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -275,37 +275,18 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/investor/portfolio", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
-    try {
-      const investorProfile = (req as any).investorProfile;
-      const portfolio = await storage.getPortfolio(investorProfile.id);
 
-      if (!portfolio) {
-        return res.json({
-          totalInvested: "0",
-          currentValue: "0",
-          returns: "0",
-          irr: "0",
-        });
-      }
-
-      res.json(portfolio);
-    } catch (error) {
-      console.error("Get portfolio error:", error);
-      res.status(500).json({ message: "Failed to get portfolio" });
-    }
-  });
 
   app.get("/api/investor/allocations", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const portfolio = await storage.getPortfolio(investorProfile.id);
+      const portfolio = await storage.getPortfolio(investorProfile._id);
 
       if (!portfolio) {
         return res.json([]);
       }
 
-      const allocations = await storage.getAllocations(portfolio.id);
+      const allocations = await storage.getAllocations(portfolio._id);
       res.json(allocations);
     } catch (error) {
       console.error("Get allocations error:", error);
@@ -316,7 +297,7 @@ export async function registerRoutes(
   app.get("/api/investor/transactions", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const transactions = await storage.getTransactions(investorProfile.id);
+      const transactions = await storage.getTransactions(investorProfile._id);
       res.json(transactions);
     } catch (error) {
       console.error("Get transactions error:", error);
@@ -335,7 +316,7 @@ export async function registerRoutes(
       const data = schema.parse(req.body);
       const transaction = await storage.getTransactionById(data.transactionId);
 
-      if (!transaction || transaction.investorId !== investorProfile.id) {
+      if (!transaction || transaction.investorId !== investorProfile._id) {
         return res.status(404).json({ message: "Transaction not found" });
       }
 
@@ -354,27 +335,45 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/investor/statements", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
-    try {
-      const investorProfile = (req as any).investorProfile;
-      const statements = await storage.getStatements(investorProfile.id);
-      res.json(statements);
-    } catch (error) {
-      console.error("Get statements error:", error);
-      res.status(500).json({ message: "Failed to get statements" });
-    }
-  });
+
 
   app.get("/api/investor/statements/:id/download", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
       const statement = await storage.getStatementById(req.params.id as string);
 
-      if (!statement || statement.investorId !== investorProfile.id) {
+      if (!statement || statement.investorId !== investorProfile._id) {
         return res.status(404).json({ message: "Statement not found" });
       }
 
-      res.json({ downloadUrl: statement.fileUrl });
+      // 1. Check if content is stored directly in DB (Buffer)
+      if (statement.fileContent) {
+         res.setHeader("Content-Type", "application/pdf");
+         res.setHeader("Content-Disposition", `attachment; filename="${statement.fileName}"`);
+         return res.send(statement.fileContent);
+      }
+
+      // 2. Check for local file
+      // We need to dynamically import or use path joining if getStatementsDir isn't available in scope
+      // Assuming simple path usage for now based on fileUrl or common 'statements' dir
+      const fs = require('fs');
+      const path = require('path');
+      const STATEMENTS_DIR = path.join(process.cwd(), "statements");
+      
+      const filePath = path.join(STATEMENTS_DIR, statement.fileName);
+
+      if (fs.existsSync(filePath)) {
+          return res.download(filePath, statement.fileName);
+      }
+
+      // 3. Fallback: Check if fileUrl is actually a public URL (e.g. S3)
+      if (statement.fileUrl && statement.fileUrl.startsWith("http")) {
+          return res.redirect(statement.fileUrl);
+      }
+      
+      console.error("File found in DB record but not on disk:", filePath);
+      return res.status(404).json({ message: "File not found on server" });
+
     } catch (error) {
       console.error("Download statement error:", error);
       res.status(500).json({ message: "Failed to download statement" });
@@ -384,7 +383,7 @@ export async function registerRoutes(
   app.get("/api/investor/requests", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const requests = await storage.getSupportRequests(investorProfile.id);
+      const requests = await storage.getSupportRequests(investorProfile._id);
       res.json(requests);
     } catch (error) {
       console.error("Get requests error:", error);
@@ -404,7 +403,7 @@ export async function registerRoutes(
 
       const data = schema.parse(req.body);
       const request = await storage.createSupportRequest({
-        investorId: investorProfile.id,
+        investorId: investorProfile._id,
         type: data.type,
         subject: data.subject,
         description: data.description,
@@ -427,7 +426,7 @@ export async function registerRoutes(
       const investorProfile = (req as any).investorProfile;
       const existing = await storage.getSupportRequestById(req.params.id as string);
 
-      if (!existing || existing.investorId !== investorProfile.id) {
+      if (!existing || existing.investorId !== investorProfile._id) {
         return res.status(404).json({ message: "Request not found" });
       }
 
@@ -451,8 +450,8 @@ export async function registerRoutes(
   app.get("/api/investor/dashboard", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const portfolio = await storage.getPortfolio(investorProfile.id);
-      const transactions = await storage.getTransactions(investorProfile.id);
+      const portfolio = await storage.getPortfolio(investorProfile._id);
+      const transactions = await storage.getTransactions(investorProfile._id);
       const announcements = await storage.getActiveAnnouncements();
 
       res.json({
@@ -471,7 +470,7 @@ export async function registerRoutes(
   app.get("/api/investor/portfolio", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const portfolio = await storage.getPortfolio(investorProfile.id);
+      const portfolio = await storage.getPortfolio(investorProfile._id);
 
       if (!portfolio) {
         return res.json(null);
@@ -488,7 +487,7 @@ export async function registerRoutes(
   app.get("/api/investor/notifications", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const notifications = await storage.getNotifications(investorProfile.id);
+      const notifications = await storage.getNotifications(investorProfile._id);
       res.json(notifications);
     } catch (error) {
       console.error("Get notifications error:", error);
@@ -510,11 +509,29 @@ export async function registerRoutes(
   app.get("/api/investor/unread-announcements", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const count = await storage.getUnreadAnnouncementCount(investorProfile.id);
+      const count = await storage.getUnreadAnnouncementCount(investorProfile._id);
       res.json({ count });
     } catch (error) {
       console.error("Get unread announcements count error:", error);
       res.status(500).json({ message: "Failed to get unread announcements count" });
+    }
+  });
+
+  // Investor Support Requests
+  app.get("/api/investor/support-requests", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const investorProfile = await storage.getInvestorProfile(user.id);
+      
+      if (!investorProfile) {
+        return res.json([]);
+      }
+      
+      const requests = await storage.getSupportRequests(investorProfile._id);
+      res.json(requests);
+    } catch (error) {
+      console.error("Get investor support requests error:", error);
+      res.status(500).json({ message: "Failed to get support requests" });
     }
   });
 
@@ -526,7 +543,7 @@ export async function registerRoutes(
      // Mark all active announcements as read for this investor
       await Promise.all(
         announcements.map(announcement => 
-          storage.markAnnouncementAsRead(announcement._id, investorProfile.id)
+          storage.markAnnouncementAsRead(announcement._id, investorProfile._id)
         )
       );
       
@@ -664,10 +681,11 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/investors", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
+  // Investor handling - Allow both Admin and Super Admin to create investors
+  app.post("/api/investors", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
-        firstName: z.string().min(2),
+        firstName: z.string().min(1),
         lastName: z.string().min(2),
         email: z.string().email(),
         phone: z.string().optional(),
@@ -721,7 +739,95 @@ export async function registerRoutes(
 
       if (investorProfile) {
         await storage.createPortfolio({
-          investorId: investorProfile.id,
+          investorId: investorProfile._id,
+          totalInvested: data.investmentAmount || "0",
+          currentValue: data.investmentAmount || "0",
+          returns: "0",
+          irr: "0",
+        });
+      }
+
+      res.status(201).json({
+        ...investorProfile,
+        credentials: {
+          email: data.email,
+          tempPassword: password, // Return password so admin can see it (if generated or manual) - typically only once
+        },
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Create investor error:", error);
+      res.status(500).json({ message: "Failed to create investor" });
+    }
+  });
+
+  app.post("/api/admin/investors", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        firstName: z.string().min(2),
+        lastName: z.string().min(2),
+        email: z.string().email(),
+        phone: z.string().optional(),
+        panNumber: z.string().optional(),
+        investmentAmount: z.string().optional(),
+        investorType: z.string().optional(),
+        password: z.string().optional(),
+        confirmPassword: z.string().optional()
+      }).refine((data) => {
+        if (data.password && data.confirmPassword && data.password !== data.confirmPassword) {
+          return false;
+        }
+        return true;
+      }, {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+      });
+
+      const data = schema.parse(req.body);
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(data.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      if (data.phone) {
+        const existingPhone = await storage.getUserByPhone(data.phone);
+        if (existingPhone) {
+          return res.status(400).json({ message: "User with this phone number already exists" });
+        }
+      }
+
+      // Generate or use provided password
+      const password = data.password || `GC${Math.random().toString(36).substring(2, 8).toUpperCase()}@2025`;
+      const hashedPassword = await hashPassword(password);
+
+      // Create User Record first
+      const user = await storage.createUser({
+        email: data.email,
+        password: hashedPassword,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone || undefined,
+      });
+
+      // Create Investor Profile linked to User
+      const investorProfile = await storage.createInvestorProfile({
+        userId: user._id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone || undefined,
+        panNumber: data.panNumber || "",
+        kycStatus: "pending",
+        investorType: data.investorType || "individual",
+      });
+
+      if (investorProfile) {
+        await storage.createPortfolio({
+          investorId: investorProfile._id,
           totalInvested: data.investmentAmount || "0",
           currentValue: data.investmentAmount || "0",
           returns: "0",
@@ -1187,6 +1293,75 @@ export async function registerRoutes(
     }
   });
 
+  // Download filtered statements as ZIP
+  app.post("/api/admin/statements/download-filtered", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { type, period, year, investorId } = req.body;
+      
+      console.log("[Bulk Download] Request with filters:", { type, period, year, investorId });
+
+      const allStatements = await storage.getAllStatements();
+      
+      // Filter statements
+      const filteredStatements = allStatements.filter(s => {
+        let match = true;
+        if (type && s.type !== type) match = false;
+        if (period && s.period.toLowerCase() !== period.toLowerCase()) match = false;
+        if (year && s.year !== parseInt(year)) match = false;
+        if (investorId && s.investorId !== investorId) match = false;
+        return match;
+      });
+
+      if (filteredStatements.length === 0) {
+        return res.status(404).json({ message: "No statements found matching the selected filters" });
+      }
+
+      console.log(`[Bulk Download] Found ${filteredStatements.length} matching statements`);
+
+      // Dynamically import JSZip
+      const JSZipModule = await import("jszip");
+      const JSZip = (JSZipModule.default || JSZipModule) as any;
+      const zip = new JSZip();
+
+      // Add files to ZIP
+      let fileCount = 0;
+      for (const statement of filteredStatements) {
+        if (statement.fileContent) {
+          let content = statement.fileContent;
+          
+          // Ensure content is a Buffer
+          if (!Buffer.isBuffer(content)) {
+             if (content && typeof content === 'object' && 'buffer' in content && Buffer.isBuffer((content as any).buffer)) {
+               content = (content as any).buffer;
+             } else {
+               content = Buffer.from(content as any);
+             }
+          }
+          
+          zip.file(statement.fileName, content);
+          fileCount++;
+        }
+      }
+
+      if (fileCount === 0) {
+        return res.status(404).json({ message: "No file content found for matching statements" });
+      }
+
+      // Generate ZIP buffer
+      const zipContent = await zip.generateAsync({ type: "nodebuffer" });
+      
+      const zipFileName = `statements_${type || 'all'}_${period || 'all'}_${year || 'all'}.zip`;
+
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader("Content-Disposition", `attachment; filename="${zipFileName}"`);
+      res.send(zipContent);
+
+    } catch (error) {
+      console.error("Bulk download error:", error);
+      res.status(500).json({ message: "Failed to generate download package" });
+    }
+  });
+
   app.get("/api/admin/nav", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
       const navHistory = await storage.getNavHistory();
@@ -1406,6 +1581,41 @@ export async function registerRoutes(
     }
   });
 
+  // Retrieve active announcements for investors
+  app.get("/api/announcements", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const announcements = await storage.getActiveAnnouncements();
+      res.json(announcements);
+    } catch (error) {
+      console.error("Get announcements error:", error);
+      res.status(500).json({ message: "Failed to get announcements" });
+    }
+  });
+
+  // Investor Statements
+  app.get("/api/investor/statements", isAuthenticated, async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      console.log("DEBUG: fetching statements for user", user.id);
+      const investorProfile = await storage.getInvestorProfile(user.id);
+
+      if (!investorProfile) {
+        console.log("DEBUG: Investor profile NOT found for user", user.id);
+        return res.json([]);
+      }
+      
+      console.log("DEBUG: Found Investor Profile:", investorProfile._id);
+      const statements = await storage.getStatements(investorProfile._id);
+      console.log("DEBUG: storage.getStatements returned count:", statements.length);
+      
+      res.json(statements);
+    } catch (error) {
+      console.error("Get investor statements error:", error);
+      res.status(500).json({ message: "Failed to get statements" });
+    }
+  });
+
   // Admin Reports
   app.get("/api/admin/reports/aum", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
@@ -1450,7 +1660,7 @@ export async function registerRoutes(
       let totalCash = 0;
 
       for (const investor of investors) {
-        const portfolio = await storage.getPortfolio(investor.id);
+        const portfolio = await storage.getPortfolio(investor._id);
         if (portfolio) {
           totalPrivateCredit += parseFloat(portfolio.privateCreditAllocation || "0");
           totalAif += parseFloat(portfolio.aifExposure || "0");
@@ -1482,7 +1692,7 @@ export async function registerRoutes(
         segments.byType[investor.investorType] = (segments.byType[investor.investorType] || 0) + 1;
         segments.byKycStatus[investor.kycStatus] = (segments.byKycStatus[investor.kycStatus] || 0) + 1;
 
-        const portfolio = await storage.getPortfolio(investor.id);
+        const portfolio = await storage.getPortfolio(investor._id);
         const invested = parseFloat(portfolio?.totalInvested || "0");
         if (invested < 1000000) segments.byInvestmentTier.small++;
         else if (invested < 5000000) segments.byInvestmentTier.medium++;
@@ -1590,27 +1800,50 @@ export async function registerRoutes(
   app.post("/api/superadmin/users", isAuthenticated, requireSuperAdmin, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
-        userId: z.string().min(1),
+        firstName: z.string().min(1),
+        lastName: z.string().min(1),
+        email: z.string().email(),
+        password: z.string().min(6),
         role: z.enum(["super_admin", "admin", "read_only"]),
         permissions: z.array(z.string()).optional(),
+        userId: z.string().optional(), // Allow optional manual override if absolutely needed, but usually generated
       });
 
       const data = schema.parse(req.body);
+
+      // 1. Check if user already exists
+      const existingUser = await storage.getUserByEmail(data.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+
+      // 2. Create base User record
+      const hashedPassword = await hashPassword(data.password);
+      const newUser = await storage.createUser({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: hashedPassword,
+        activeSessionToken: undefined,
+      });
+
+      // 3. Create AdminUser record linked to the new User
       const newAdmin = await storage.createAdminUser({
-        userId: data.userId,
+        userId: newUser._id, // Link to the MongoDB _id of the User
         role: data.role,
         permissions: data.permissions || [],
       });
 
-      res.status(201).json(newAdmin);
+      res.status(201).json({ ...newAdmin, user: newUser });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      console.error("Create superadmin user error:", error);
-      res.status(500).json({ message: "Failed to create user" });
+      console.error("Create admin error:", error);
+      res.status(500).json({ message: "Failed to create admin user" });
     }
   });
+
 
   app.put("/api/superadmin/users/:id", isAuthenticated, requireSuperAdmin, async (req: Request, res: Response) => {
     try {
@@ -1841,7 +2074,7 @@ export async function registerRoutes(
   app.get("/api/investor/support-requests", isAuthenticated, requireInvestor, async (req: Request, res: Response) => {
     try {
       const investorProfile = (req as any).investorProfile;
-      const requests = await storage.getSupportRequests(investorProfile.id);
+      const requests = await storage.getSupportRequests(investorProfile._id);
       res.json(requests);
     } catch (error) {
       console.error("Get support requests error:", error);

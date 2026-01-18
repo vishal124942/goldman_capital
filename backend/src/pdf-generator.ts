@@ -52,7 +52,7 @@ export async function generateStatementPDF(
   const docDefinition: any = {
     content: [
       {
-        text: "CAPITAL FORGE",
+        text: "GODMAN CAPITAL",
         style: "header",
         alignment: "center",
       },

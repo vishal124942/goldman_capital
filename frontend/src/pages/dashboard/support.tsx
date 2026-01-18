@@ -9,34 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { MessageSquare, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import type { SupportRequest } from "@shared/schema";
 
-const mockRequests: SupportRequest[] = [
-  {
-    id: "1",
-    investorId: "inv1",
-    type: "statement_request",
-    subject: "Request for Q4 2024 Statement",
-    description: "Please provide the quarterly statement for Q4 2024",
-    status: "closed",
-    priority: "normal",
-    assignedTo: null,
-    resolvedAt: new Date("2025-01-08"),
-    createdAt: new Date("2025-01-05"),
-    updatedAt: new Date("2025-01-08"),
-  },
-  {
-    id: "2",
-    investorId: "inv1",
-    type: "general_inquiry",
-    subject: "Query about portfolio allocation",
-    description: "Would like to understand the current allocation strategy",
-    status: "open",
-    priority: "normal",
-    assignedTo: "rm1",
-    resolvedAt: null,
-    createdAt: new Date("2025-01-10"),
-    updatedAt: new Date("2025-01-10"),
-  },
-];
+
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -82,7 +55,7 @@ export default function SupportPage() {
     queryKey: ["/api/investor/support-requests"],
   });
 
-  const displayRequests = requests && requests.length > 0 ? requests : mockRequests;
+  const displayRequests = requests || [];
 
   const sidebarStyle = {
     "--sidebar-width": "17rem",
@@ -136,7 +109,7 @@ export default function SupportPage() {
                   ) : (
                     displayRequests.map((request) => (
                       <div
-                        key={request.id}
+                        key={(request as any)._id}
                         className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex items-start gap-3">

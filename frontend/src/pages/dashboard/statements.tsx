@@ -6,90 +6,14 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Statement } from "@shared/schema";
 
-const mockStatements: Statement[] = [
-  {
-    id: "1",
-    investorId: "inv1",
-    type: "monthly",
-    period: "December",
-    year: 2024,
-    month: 12,
-    quarter: null,
-    fileName: "Statement_Dec_2024.pdf",
-    fileUrl: "#",
-    fileSize: 245000,
-    version: 1,
-    generatedAt: new Date("2025-01-05"),
-    createdAt: new Date("2025-01-05"),
-  },
-  {
-    id: "2",
-    investorId: "inv1",
-    type: "monthly",
-    period: "November",
-    year: 2024,
-    month: 11,
-    quarter: null,
-    fileName: "Statement_Nov_2024.pdf",
-    fileUrl: "#",
-    fileSize: 238000,
-    version: 1,
-    generatedAt: new Date("2024-12-05"),
-    createdAt: new Date("2024-12-05"),
-  },
-  {
-    id: "3",
-    investorId: "inv1",
-    type: "quarterly",
-    period: "Q3",
-    year: 2024,
-    month: null,
-    quarter: 3,
-    fileName: "Quarterly_Report_Q3_2024.pdf",
-    fileUrl: "#",
-    fileSize: 512000,
-    version: 1,
-    generatedAt: new Date("2024-10-15"),
-    createdAt: new Date("2024-10-15"),
-  },
-  {
-    id: "4",
-    investorId: "inv1",
-    type: "quarterly",
-    period: "Q2",
-    year: 2024,
-    month: null,
-    quarter: 2,
-    fileName: "Quarterly_Report_Q2_2024.pdf",
-    fileUrl: "#",
-    fileSize: 498000,
-    version: 1,
-    generatedAt: new Date("2024-07-15"),
-    createdAt: new Date("2024-07-15"),
-  },
-  {
-    id: "5",
-    investorId: "inv1",
-    type: "annual",
-    period: "FY",
-    year: 2024,
-    month: null,
-    quarter: null,
-    fileName: "Annual_Summary_FY2024.pdf",
-    fileUrl: "#",
-    fileSize: 1250000,
-    version: 1,
-    generatedAt: new Date("2024-04-30"),
-    createdAt: new Date("2024-04-30"),
-  },
-];
+
 
 export default function StatementsPage() {
   const { data: statements, isLoading } = useQuery<Statement[]>({
     queryKey: ["/api/investor/statements"],
   });
 
-  const displayStatements = statements && statements.length > 0 ? statements : mockStatements;
+  const displayStatements = statements || [];
 
   const monthlyStatements = displayStatements.filter(s => s.type === "monthly");
   const quarterlyStatements = displayStatements.filter(s => s.type === "quarterly");

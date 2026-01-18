@@ -33,6 +33,25 @@ const generatePerformanceData = (portfolio: Portfolio | null) => {
   }));
 };
 
+const formatToCrores = (value: string | number | undefined) => {
+  if (value === undefined || value === null) return "—";
+  const num = Number(value);
+  if (isNaN(num)) return "—";
+  
+  if (num === 0) return "₹0";
+  
+  // Convert to Crores (1 Cr = 1,00,00,000)
+  const inCrores = num / 10000000;
+  
+  // If it's less than 1 Cr but greater than 0, maybe show Lakhs? 
+  // But user asked for Cr specifically. Let's stick to Cr for large numbers, 
+  // or just use Cr for everything if it's the requested format for this dashboard.
+  // Actually, for small numbers (like 0), we handled it.
+  // Let's format to 2 decimal places.
+  
+  return `₹${inCrores.toFixed(2)} Cr`;
+};
+
 export default function InvestorDashboard() {
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery<DashboardData>({
     queryKey: ["/api/investor/dashboard"],
@@ -95,14 +114,14 @@ export default function InvestorDashboard() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <MetricsCard
                 title="Total Invested"
-                value={portfolio ? `₹${Number(portfolio.totalInvested).toLocaleString("en-IN")}` : "—"}
+                value={formatToCrores(portfolio?.totalInvested)}
                 icon={<Wallet className="w-5 h-5 text-accent" />}
                 delay={0}
                 isLoading={dashboardLoading}
               />
               <MetricsCard
                 title="Current Value"
-                value={portfolio ? `₹${Number(portfolio.currentValue).toLocaleString("en-IN")}` : "—"}
+                value={formatToCrores(portfolio?.currentValue)}
                 change={portfolio ? `+${((Number(portfolio.currentValue) / Number(portfolio.totalInvested) - 1) * 100).toFixed(1)}%` : undefined}
                 changeType="positive"
                 description="Since inception"

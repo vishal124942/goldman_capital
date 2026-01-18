@@ -225,6 +225,10 @@ class MongoStorage implements IStorage {
   }
 
   async deleteAdminUser(id: string): Promise<void> {
+    const admin = await AdminUser.findById(id);
+    if (admin && admin.userId) {
+      await User.findByIdAndDelete(admin.userId);
+    }
     await AdminUser.findByIdAndDelete(id);
   }
 

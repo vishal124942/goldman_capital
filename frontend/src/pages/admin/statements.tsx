@@ -12,7 +12,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { FileText, Upload, Download, Trash2, Loader2, Users } from "lucide-react";
+import { FileText, Upload, Download, Loader2, Users } from "lucide-react";
 import type { Statement, InvestorProfile } from "@shared/schema";
 
 export default function AdminStatementsPage() {
@@ -215,6 +215,76 @@ export default function AdminStatementsPage() {
     }
   };
 
+  const [isDownloadingFiltered, setIsDownloadingFiltered] = useState(false);
+
+  const handleDownloadFiltered = async () => {
+    if (!selectedType && !selectedPeriod && !selectedYear && !selectedInvestor) {
+      toast({
+        title: "No Filters Selected",
+        description: "Please select at least one filter (Type, Period, Year, or Investor) or download all.",
+        variant: "default", 
+      });
+      // Allow proceeding even without filters to download everything, just a warning or info might be enough, 
+      // but let's proceed to allow "Download All" if nothing selected.
+    }
+
+    setIsDownloadingFiltered(true);
+
+    try {
+      const response = await fetch("/api/admin/statements/download-filtered", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          investorId: selectedInvestor || undefined,
+          type: selectedType || undefined,
+          period: selectedPeriod || undefined,
+          year: selectedYear ? parseInt(selectedYear) : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Download failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      
+      // Try to get filename from header
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let fileName = "statements.zip";
+      if (contentDisposition) {
+        const matches = /filename="([^"]*)"/.exec(contentDisposition);
+        if (matches && matches[1]) {
+          fileName = matches[1];
+        }
+      }
+      
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download Started",
+        description: "Your filtered statements are downloading.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloadingFiltered(false);
+    }
+  };
+
   const handleUpload = async () => {
     if (!uploadInvestor || !uploadType || !uploadPeriod || !uploadFileName || !uploadFileUrl) {
       toast({
@@ -410,6 +480,25 @@ export default function AdminStatementsPage() {
                         </>
                       )}
                     </Button>
+                    <Button
+                      onClick={handleDownloadFiltered}
+                      disabled={isDownloadingFiltered}
+                      variant="outline"
+                      className="gap-2"
+                      data-testid="admin-button-download-filtered"
+                    >
+                      {isDownloadingFiltered ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          Download Filtered
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -523,16 +612,6 @@ export default function AdminStatementsPage() {
                                   ) : (
                                     <Download className="w-4 h-4 opacity-50 cursor-not-allowed" />
                                   )}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => deleteMutation.mutate(statement.id)}
-                                  disabled={deleteMutation.isPending}
-                                  className="text-destructive hover:text-destructive"
-                                  data-testid={`admin-button-delete-statement-${statement.id}`}
-                                >
-                                  <Trash2 className="w-4 h-4" />
                                 </Button>
                               </div>
                             </td>

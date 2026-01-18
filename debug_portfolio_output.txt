@@ -1,0 +1,14 @@
+Connected to MongoDB via Debug Portfolio Script
+
+Found 1 investor(s) named 'Anuj':
+
+[Investor Profile]
+ - Name: Anuj Investor
+ - ID: b510839e-dd55-410c-93d1-1b79b2f604aa
+ - UserID: f0a0278a-124b-4034-8dfe-10e190629142
+
+   Searching for Portfolio using investorId: b510839e-dd55-410c-93d1-1b79b2f604aa
+   ✅ Found Portfolio: c903032c-198b-4659-808e-bf24df010c50
+      - Total Invested: "1000000.00" (Type: string)
+      - Current Value: "1100000.00"
+      - Created At: Sat Jan 17 2026 13:31:23 GMT+0530 (India Standard Time)

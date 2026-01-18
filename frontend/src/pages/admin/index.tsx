@@ -59,8 +59,8 @@ export default function AdminDashboard() {
   })) || [];
 
   const formatCurrency = (amount: number) => {
-    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(0)} Cr`;
-    if (amount >= 100000) return `₹${(amount / 100000).toFixed(0)} L`;
+    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)} Cr`;
+    if (amount >= 100000) return `₹${(amount / 100000).toFixed(2)} L`;
     return `₹${amount.toLocaleString('en-IN')}`;
   };
 
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
               />
               <MetricsCard
                 title="Net NAV"
-                value={aumLoading ? "Loading..." : aumReport?.history?.[0] ? `₹${parseFloat(aumReport.history[0].nav).toLocaleString('en-IN')}` : "—"}
+                value={aumLoading ? "Loading..." : aumReport?.history?.[0] ? formatCurrency(parseFloat(aumReport.history[0].nav)) : "—"}
                 description="Latest per unit value"
                 icon={<TrendingUp className="w-5 h-5 text-accent" />}
               />

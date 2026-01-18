@@ -1,0 +1,42 @@
+Connected to MongoDB via Debug Statements Script
+
+Found 1 investor(s) named 'Anuj':
+ - Name: Anuj Investor
+   ID (InvestorProfile._id): b510839e-dd55-410c-93d1-1b79b2f604aa
+   UserID link: f0a0278a-124b-4034-8dfe-10e190629142
+
+Total Statements in DB: 26
+
+Checking Statements associated with Anuj:
+ - Statement ID: 764b3fce-6bdc-4a04-b8b4-e1d27cb25469, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_January_2025_b510839e.pdf
+ - Statement ID: 5e6de597-e534-4330-b005-0a12fca88c4a, investorId: investor-profile-001 [NO MATCH]
+   File: quarterly_Q1_2025_investor.pdf
+ - Statement ID: 545c33f2-6bc4-4c7a-a66d-33ab3242d289, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_january_2026_b510839e.pdf
+ - Statement ID: d6b3befa-072c-43b9-a8b8-63d18a1c5ab1, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_January_2025_b510839e.pdf
+ - Statement ID: b8938fba-5c4e-4f10-91c2-9897a78d3b0a, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_February_2025_b510839e.pdf
+ - Statement ID: 7a218ec7-b9c1-4bdd-a5f5-9cfa1911779c, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: quarterly_Q1_2025_b510839e.pdf
+ - Statement ID: 1af65cfb-ac50-4ed7-b86d-97b0aa024a18, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_january_2026_b510839e.pdf
+ - Statement ID: 3107e5c2-6111-42f3-831f-ea4053da9e1b, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_january_2026_b510839e.pdf
+ - Statement ID: b5cda14f-22c7-4b12-aa35-364b513d9544, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_January_2025_b510839e.pdf
+ - Statement ID: 0cabdbed-c7f2-48e7-9ccf-98866bb56d86, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_january_2026_b510839e.pdf
+ - Statement ID: cc72d7d1-858b-4937-924c-5c9c1957dc9f, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_january_2026_b510839e.pdf
+ - Statement ID: 692ad513-1bdb-413b-9b7a-af271ffda317, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_january_2026_b510839e.pdf
+ - Statement ID: 0a2a572d-9aab-4166-93d0-f2fd5030e820, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: monthly_january_2026_b510839e.pdf
+ - Statement ID: 04047580-a971-4a34-aae5-d6a0230ba7f2, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: quarterly_q2_2026_b510839e.pdf
+ - Statement ID: 7fdcfcb0-0497-4278-afed-cc06cdaa8273, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: quarterly_Q1_2025_2025_b510839e.pdf
+ - Statement ID: 491873de-115d-4244-ad31-61b5515b896d, investorId: b510839e-dd55-410c-93d1-1b79b2f604aa [MATCHES ANUJ]
+   File: annual_annual_2024_b510839e.pdf

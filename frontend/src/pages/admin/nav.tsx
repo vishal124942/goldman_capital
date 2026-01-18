@@ -88,6 +88,12 @@ export default function AdminNavPage() {
 
   const latestNav = navHistory[navHistory.length - 1];
   const previousNav = navHistory[navHistory.length - 2] || latestNav;
+  const formatCurrency = (amount: number) => {
+    if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)} Cr`;
+    if (amount >= 100000) return `₹${(amount / 100000).toFixed(2)} L`;
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
+
   const navChange = previousNav ? ((latestNav.nav - previousNav.nav) / previousNav.nav * 100).toFixed(2) : "0";
 
   const sidebarStyle = {
@@ -119,7 +125,7 @@ export default function AdminNavPage() {
                     <p className="text-sm text-muted-foreground">Current NAV</p>
                     <TrendingUp className="w-5 h-5 text-accent" />
                   </div>
-                  <p className="text-3xl font-bold">₹{latestNav.nav.toFixed(2)}</p>
+                  <p className="text-3xl font-bold">{formatCurrency(latestNav.nav)}</p>
                   <p className="text-sm text-green-600 dark:text-green-400">
                     +{navChange}% MoM
                   </p>
@@ -174,6 +180,7 @@ export default function AdminNavPage() {
                           tickLine={false}
                           tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                           domain={["auto", "auto"]}
+                          tickFormatter={(value) => value >= 10000000 ? `${(value/10000000).toFixed(0)}Cr` : value}
                         />
                         <Tooltip
                           contentStyle={{
@@ -181,7 +188,7 @@ export default function AdminNavPage() {
                             border: "1px solid hsl(var(--border))",
                             borderRadius: "8px",
                           }}
-                          formatter={(value: number) => [`₹${value.toFixed(2)}`, "NAV"]}
+                          formatter={(value: number) => [formatCurrency(value), "NAV"]}
                         />
                         <Line
                           type="monotone"
@@ -277,7 +284,7 @@ export default function AdminNavPage() {
                         return (
                           <tr key={index} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                             <td className="py-3 px-4 text-sm font-medium">{entry.date}</td>
-                            <td className="py-3 px-4 text-right text-sm">₹{entry.nav.toFixed(2)}</td>
+                            <td className="py-3 px-4 text-right text-sm">{formatCurrency(entry.nav)}</td>
                             <td className="py-3 px-4 text-right text-sm">₹{entry.aum} Cr</td>
                             <td className={`py-3 px-4 text-right text-sm ${change !== "—" && parseFloat(change) >= 0
                                 ? "text-green-600 dark:text-green-400"

@@ -42,7 +42,7 @@ interface AdminUser {
 
 export default function SuperAdminDashboard() {
   const { data: admins, isLoading: adminsLoading } = useQuery<AdminUser[]>({
-    queryKey: ["/api/superadmin/admins"],
+    queryKey: ["/api/superadmin/users"],
   });
 
   const { data: activityLogs, isLoading: logsLoading } = useQuery<ActivityLog[]>({

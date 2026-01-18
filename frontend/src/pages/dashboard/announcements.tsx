@@ -7,64 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import type { Announcement } from "@shared/schema";
 import { useEffect } from "react";
 
-const mockAnnouncements: Announcement[] = [
-  {
-    id: "1",
-    title: "Q4 2024 Performance Report Available",
-    content: "The quarterly performance report for Q4 2024 is now available for download in your statements section. The fund delivered 6.2% returns for the quarter.",
-    type: "update",
-    priority: "normal",
-    targetAudience: "all",
-    isActive: true,
-    publishedAt: new Date("2025-01-10"),
-    expiresAt: null,
-    createdBy: "admin1",
-    createdAt: new Date("2025-01-10"),
-    updatedAt: new Date("2025-01-10"),
-  },
-  {
-    id: "2",
-    title: "Holiday Notice - Republic Day",
-    content: "Please note that our offices will be closed on January 26, 2025 for Republic Day. Normal operations will resume on January 27, 2025.",
-    type: "general",
-    priority: "low",
-    targetAudience: "all",
-    isActive: true,
-    publishedAt: new Date("2025-01-15"),
-    expiresAt: new Date("2025-01-27"),
-    createdBy: "admin1",
-    createdAt: new Date("2025-01-15"),
-    updatedAt: new Date("2025-01-15"),
-  },
-  {
-    id: "3",
-    title: "New Investment Opportunity - Real Estate Fund",
-    content: "We are excited to announce a new co-investment opportunity in a premium real estate fund. Minimum commitment: ₹50 lakhs. Contact your relationship manager for details.",
-    type: "update",
-    priority: "high",
-    targetAudience: "all",
-    isActive: true,
-    publishedAt: new Date("2025-01-08"),
-    expiresAt: null,
-    createdBy: "admin1",
-    createdAt: new Date("2025-01-08"),
-    updatedAt: new Date("2025-01-08"),
-  },
-  {
-    id: "4",
-    title: "Annual Investor Meet 2025",
-    content: "You are cordially invited to our Annual Investor Meet on February 15, 2025 at The Taj Mahal Palace, Mumbai. RSVP by February 10, 2025.",
-    type: "general",
-    priority: "normal",
-    targetAudience: "all",
-    isActive: true,
-    publishedAt: new Date("2025-01-05"),
-    expiresAt: null,
-    createdBy: "admin1",
-    createdAt: new Date("2025-01-05"),
-    updatedAt: new Date("2025-01-05"),
-  },
-];
+
 
 export default function AnnouncementsPage() {
   const queryClient = useQueryClient();
@@ -73,7 +16,7 @@ export default function AnnouncementsPage() {
     queryKey: ["/api/announcements"],
   });
 
-  const displayAnnouncements = announcements || mockAnnouncements;
+  const displayAnnouncements = announcements || [];
 
   // Mark all announcements as read when page is viewed
   const markAllReadMutation = useMutation({

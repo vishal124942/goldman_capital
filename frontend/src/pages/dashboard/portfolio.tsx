@@ -22,10 +22,21 @@ interface ExtendedPortfolio extends Portfolio {
   allocations?: Allocation[];
 }
 
+const formatToCrores = (value: string | number | undefined) => {
+  if (value === undefined || value === null) return "0";
+  const num = Number(value);
+  if (isNaN(num)) return "0";
+  if (num === 0) return "0";
+  const inCrores = num / 10000000;
+  return `₹${inCrores.toFixed(2)} Cr`;
+};
+
 export default function PortfolioPage() {
   const { data: portfolio, isLoading } = useQuery<ExtendedPortfolio>({
     queryKey: ["/api/investor/portfolio"],
   });
+  
+  // ... rest of component until return ...
 
   const sidebarStyle = {
     "--sidebar-width": "17rem",
@@ -123,10 +134,10 @@ export default function PortfolioPage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Total Invested</p>
-                      <p className="text-xl font-bold">₹{portfolio ? (parseFloat(portfolio.totalInvested) / 10000000).toFixed(2) + ' Cr' : '0'}</p>
+                      <p className="text-xl font-bold">{formatToCrores(portfolio?.totalInvested)}</p>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">Current Value: ₹{portfolio ? (parseFloat(portfolio.currentValue) / 10000000).toFixed(2) + ' Cr' : '0'}</p>
+                  <p className="text-xs text-muted-foreground">Current Value: {formatToCrores(portfolio?.currentValue)}</p>
                 </CardContent>
               </Card>
             </div>
@@ -197,8 +208,8 @@ export default function PortfolioPage() {
                   const deployed = total - cash;
                   const deploymentPercentage = total > 0 ? (deployed / total) * 100 : 0;
 
-                  let status: "fully" | "partial" | "pending" = "pending";
-                  if (deploymentPercentage >= 95) status = "fully";
+                  let status: "deployed" | "partial" | "pending" = "pending";
+                  if (deploymentPercentage >= 95) status = "deployed";
                   else if (deploymentPercentage > 0) status = "partial";
 
                   return (

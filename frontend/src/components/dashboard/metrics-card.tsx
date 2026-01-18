@@ -75,8 +75,9 @@ export function MetricsCard({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut", delay }}
+      className="h-full"
     >
-      <Card className="bg-card hover-elevate transition-all duration-300">
+      <Card className="bg-card hover-elevate transition-all duration-300 h-full flex flex-col justify-between">
         <CardContent className="p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">

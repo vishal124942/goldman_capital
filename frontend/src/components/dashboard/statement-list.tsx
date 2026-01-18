@@ -119,38 +119,16 @@ export function StatementList({ statements, isLoading }: StatementListProps) {
                 </div>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                try {
-                  const res = await fetch(statement.fileUrl, { credentials: "include" });
-                  if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.message || "Download failed");
-                  }
-                  const blob = await res.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = statement.fileName || `statement-${statement.period}-${statement.year}.pdf`;
-                  document.body.appendChild(a);
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  document.body.removeChild(a);
-                } catch (error) {
-                  // Import toast or pass it as prop if needed, but since this is a pure component, 
-                  // we might need to assume toast is available globally or ignore for now.
-                  // BETTER: Revert to <a> but add specific error handling logic? 
-                  // No, let's assume we can use the hook or just alert for now, 
-                  // OR simpler: just force credentials include in fetch.
-                  console.error("Download error:", error);
-                  alert("Failed to download: " + (error as any).message);
-                }
-              }}
-              data-testid={`button-download-statement-${statement.id}`}
-            >
-              <Download className="w-4 h-4" />
+            <Button variant="ghost" size="sm" asChild>
+              <a 
+                href={`/api/investor/statements/${(statement as any)._id || (statement as any).id}/download`} 
+                download 
+                target="_blank"
+                rel="noreferrer"
+                data-testid={`button-download-statement-${(statement as any)._id || (statement as any).id}`}
+              >
+                <Download className="w-4 h-4" />
+              </a>
             </Button>
           </div>
         ))}
