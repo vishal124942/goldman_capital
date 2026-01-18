@@ -10,6 +10,10 @@
         "resolveJsonModule": true,
         "declaration": true,
         "baseUrl": ".",
+        "types": [
+            "node",
+            "express"
+        ],
         "paths": {
             "@models/*": [
                 "./models/*"
