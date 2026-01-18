@@ -10,6 +10,9 @@
         "resolveJsonModule": true,
         "declaration": true,
         "baseUrl": ".",
+        "typeRoots": [
+            "./node_modules/@types"
+        ],
         "paths": {
             "@models/*": [
                 "./models/*"
