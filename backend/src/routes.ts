@@ -891,7 +891,10 @@ export async function registerRoutes(
 
   app.get("/api/admin/investors/:id", isAuthenticated, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const investor = await storage.getInvestorProfileById(req.params.id as string);
+      const investorId = ((req.params.id as string) || "").trim();
+      console.log(`[Route] GET /api/admin/investors/${investorId} hit`);
+
+      const investor = await storage.getInvestorProfileById(investorId);
       if (!investor) {
         return res.status(404).json({ message: "Investor not found" });
       }
