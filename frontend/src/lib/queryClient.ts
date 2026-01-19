@@ -10,6 +10,9 @@ async function throwIfResNotOk(res: Response) {
       const json = JSON.parse(text);
       if (json.message) {
         message = json.message;
+        if (json.errors) {
+          message += `: ${JSON.stringify(json.errors)}`;
+        }
       }
     } catch (e) {
       // Not JSON, use original text

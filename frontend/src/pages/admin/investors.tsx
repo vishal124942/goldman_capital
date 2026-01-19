@@ -273,10 +273,11 @@ export default function AdminInvestorsPage() {
         description: "New investor has been successfully added to the system.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error("Create investor error:", error);
       toast({
-        title: "Error",
-        description: "Failed to add investor. Please try again.",
+        title: "Creation Failed",
+        description: error.message || "Failed to add investor. Please checking your input.",
         variant: "destructive",
       });
     },
