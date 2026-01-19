@@ -185,7 +185,16 @@ class MongoStorage implements IStorage {
   }
 
   async getInvestorProfileById(id: string): Promise<IInvestorProfile | null> {
-    const profile = await InvestorProfile.findById(id).lean();
+    console.log(`[Storage] getInvestorProfileById lookup: '${id}'`); // Debug log
+    // Use findOne to be explicit about _id matching (strings vs ObjectIds)
+    const profile = await InvestorProfile.findOne({ _id: id }).lean();
+
+    if (!profile) {
+      console.log(`[Storage] Investor not found for ID: '${id}'`);
+    } else {
+      console.log(`[Storage] Investor found: ${profile._id}`);
+    }
+
     return profile ? { ...profile, id: profile._id } as any : null;
   }
 
