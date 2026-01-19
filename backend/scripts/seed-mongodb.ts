@@ -112,7 +112,7 @@ async function seed() {
             {
                 _id: "admin-profile-001",
                 userId: "admin-user-001",
-                role: "super_admin",
+                role: "admin",
                 permissions: ["all"],
                 isActive: true,
             },

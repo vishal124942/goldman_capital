@@ -139,6 +139,7 @@ export default function AdminInvestorsPage() {
     queryFn: async () => {
       if (!selectedInvestor?.id) return null;
       const res = await fetch(`/api/admin/investors/${selectedInvestor.id}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch details");
       return res.json();
     },
     enabled: !!selectedInvestor?.id && (showViewDialog || showEditDialog),
@@ -150,6 +151,7 @@ export default function AdminInvestorsPage() {
     queryFn: async () => {
       if (!selectedInvestor?.id) return [];
       const res = await fetch(`/api/admin/transactions?investorId=${selectedInvestor.id}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch transactions");
       return res.json();
     },
     enabled: !!selectedInvestor?.id && showTransactionsDialog,
