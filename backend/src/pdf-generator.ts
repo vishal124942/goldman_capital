@@ -29,6 +29,56 @@ interface StatementData {
   returns?: string;
 }
 
+// Use require directly with exhaustive fallback attempts
+// Reference from working repo: require("pdfmake/src/printer")
+let PdfPrinter: any = null;
+const requirePaths = [
+  "pdfmake/src/printer", // Legacy/Mac path (matches reference repo)
+  "pdfmake/js/Printer",  // Compiled JS (Linux/Production preferred)
+  "pdfmake/src/Printer", // Source JS (Linux case-sensitive)
+  "pdfmake",
+  "pdfmake/build/pdfmake"
+];
+
+let hasAttemptedLoad = false;
+
+const loadPdfPrinter = () => {
+  if (PdfPrinter) return PdfPrinter;
+  if (hasAttemptedLoad && !PdfPrinter) return null; // Avoid spamming failures
+
+  hasAttemptedLoad = true;
+  console.log("[PDF] Initializing pdfmake printer loading...");
+  for (const p of requirePaths) {
+    try {
+      const mod = require(p);
+      console.log(`[PDF] require('${p}') returned type: ${typeof mod}`);
+
+      let found: any = null;
+      if (typeof mod === 'function') {
+        found = mod;
+      } else if (mod && typeof mod.default === 'function') {
+        found = mod.default;
+      } else if (mod && typeof mod.Printer === 'function') {
+        found = mod.Printer;
+      }
+
+      if (found) {
+        PdfPrinter = found;
+        console.log(`[PDF] SUCCESS: Loaded PdfPrinter from '${p}'`);
+        return PdfPrinter;
+      }
+    } catch (e: any) {
+      console.warn(`[PDF] Path '${p}' failed: ${e.message}`);
+    }
+  }
+
+  console.error("[PDF] FATAL: Failed to load PdfPrinter from all known paths.");
+  return null;
+};
+
+// Intialize once at start
+loadPdfPrinter();
+
 export async function generateStatementPDF(
   investorId: string,
   data: StatementData
@@ -37,43 +87,8 @@ export async function generateStatementPDF(
   const filePath = path.join(STATEMENTS_DIR, fileName);
   const fileUrl = `/statements/${fileName}`;
 
-  // Use require directly with exhaustive fallback attempts
-  // Reference from working repo: require("pdfmake/src/printer")
-  let PdfPrinter: any;
-  const requirePaths = [
-    "pdfmake/src/printer", // Legacy/Mac path (matches reference repo)
-    "pdfmake/js/Printer",  // Compiled JS (Linux/Production preferred)
-    "pdfmake/src/Printer", // Source JS (Linux case-sensitive)
-    "pdfmake",
-    "pdfmake/build/pdfmake"
-  ];
-
-  for (const p of requirePaths) {
-    try {
-      const mod = require(p);
-      console.log(`Checking require('${p}'). Type: ${typeof mod}`);
-
-      // Try every common pattern
-      if (typeof mod === 'function') {
-        PdfPrinter = mod;
-      } else if (mod && typeof mod.default === 'function') {
-        PdfPrinter = mod.default;
-      } else if (mod && typeof mod.Printer === 'function') {
-        PdfPrinter = mod.Printer;
-      }
-
-      if (PdfPrinter) {
-        console.log(`Successfully loaded PdfPrinter from '${p}'`);
-        break;
-      }
-    } catch (e: any) {
-      console.warn(`Failed require('${p}'): ${e.message}`);
-    }
-  }
-
-  if (!PdfPrinter) {
-    console.error("CRITICAL: All pdfmake loading attempts failed.");
-  }
+  // Use the pre-loaded printer
+  const PrinterCtor = loadPdfPrinter();
 
   // Create PDF document definition
   const docDefinition: any = {
@@ -189,9 +204,9 @@ export async function generateStatementPDF(
 
   // Create PDF
   try {
-    if (!PdfPrinter) throw new Error("PdfMake library not loaded");
+    if (!PrinterCtor) throw new Error("PdfMake library not loaded");
 
-    const printer = new PdfPrinter(fonts);
+    const printer = new PrinterCtor(fonts);
     let pdfDoc = printer.createPdfKitDocument(docDefinition);
 
     // Handle compiled pdfmake / potential async implementation

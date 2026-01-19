@@ -136,9 +136,38 @@ export async function registerRoutes(
       const role = adminUser ? adminUser.role : "investor";
 
       res.json({ ...user, role });
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Fetch user error:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
+
+  // DEBUG ENDPOINT: Check dependency status
+  app.get("/api/debug/dependencies", (req, res) => {
+    const results: any = {};
+    const paths = [
+      "pdfmake/src/printer",
+      "pdfmake/js/Printer",
+      "pdfmake",
+      "pdfmake/build/pdfmake"
+    ];
+
+    paths.forEach(p => {
+      try {
+        const mod = require(p);
+        results[p] = {
+          status: "loaded",
+          type: typeof mod,
+          keys: Object.keys(mod),
+          hasDefault: !!mod.default,
+          hasPrinter: !!mod.Printer
+        };
+      } catch (e: any) {
+        results[p] = { error: e.message };
+      }
+    });
+
+    res.json(results);
   });
 
   app.post("/api/logout", (req: Request, res: Response) => {
@@ -1307,7 +1336,7 @@ export async function registerRoutes(
         }
       }
 
-      console.log(`[Download] Sending PDF content...`);
+      console.log(`[Download] Sending PDF content. Final Buffer size: ${content.length} bytes`);
       res.send(content);
 
     } catch (error) {
