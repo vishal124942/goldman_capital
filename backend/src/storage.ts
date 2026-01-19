@@ -181,16 +181,18 @@ class MongoStorage implements IStorage {
     if (!profile) {
       profile = await InvestorProfile.findById(userId).lean();
     }
-    return profile;
+    return profile ? { ...profile, id: profile._id } as any : null;
   }
 
   async getInvestorProfileById(id: string): Promise<IInvestorProfile | null> {
-    return InvestorProfile.findById(id).lean();
+    const profile = await InvestorProfile.findById(id).lean();
+    return profile ? { ...profile, id: profile._id } as any : null;
   }
 
   async createInvestorProfile(profile: Partial<IInvestorProfile>): Promise<IInvestorProfile> {
     const id = randomUUID();
-    return InvestorProfile.create({ ...profile, _id: id });
+    const result = await InvestorProfile.create({ ...profile, _id: id });
+    return { ...result.toObject(), id: result._id } as any;
   }
 
   async updateInvestorProfile(id: string, profile: Partial<IInvestorProfile>): Promise<IInvestorProfile | null> {
@@ -202,7 +204,8 @@ class MongoStorage implements IStorage {
   }
 
   async getAllInvestors(): Promise<IInvestorProfile[]> {
-    return InvestorProfile.find().sort({ createdAt: -1 }).lean();
+    const profiles = await InvestorProfile.find().sort({ createdAt: -1 }).lean();
+    return profiles.map(p => ({ ...p, id: p._id })) as any;
   }
 
   // ==================== ADMIN USER METHODS ====================

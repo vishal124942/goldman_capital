@@ -876,12 +876,16 @@ export async function registerRoutes(
           tempPassword: password, // Return password so admin can see it (if generated or manual) - typically only once
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      console.error("Create investor error:", error);
-      res.status(500).json({ message: "Failed to create investor" });
+      console.error("Create investor error [CRITICAL]:", error);
+      res.status(500).json({
+        message: "Failed to create investor",
+        error: error.message,
+        details: typeof error === 'object' ? JSON.stringify(error) : String(error)
+      });
     }
   });
 
