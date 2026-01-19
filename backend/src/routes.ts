@@ -896,7 +896,8 @@ export async function registerRoutes(
 
       const investor = await storage.getInvestorProfileById(investorId);
       if (!investor) {
-        return res.status(404).json({ message: "Investor not found" });
+        console.log(`[Route] 404 - Investor not found for ID: ${investorId}`);
+        return res.status(404).json({ message: `Investor not found (ID: ${investorId})` });
       }
 
       const portfolios = await storage.getPortfoliosByInvestorId(investor.id);
