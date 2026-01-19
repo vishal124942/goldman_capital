@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Calendar } from "lucide-react";
 import type { Statement } from "@shared/schema";
 import { API_BASE_URL } from "@/lib/queryClient";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 interface StatementListProps {
   statements: Statement[];
@@ -37,6 +39,39 @@ const getStatementTypeBadgeVariant = (type: string) => {
 };
 
 export function StatementList({ statements, isLoading }: StatementListProps) {
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (statementId: string, fileName: string) => {
+    setDownloadingId(statementId);
+    try {
+      const downloadPath = `/api/statements/${statementId}/download`;
+      const fullUrl = API_BASE_URL ? `${API_BASE_URL.replace(/\/$/, "")}${downloadPath}` : downloadPath;
+
+      const response = await fetch(fullUrl, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Download failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download error:", error);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card className="bg-card">
@@ -94,7 +129,7 @@ export function StatementList({ statements, isLoading }: StatementListProps) {
       <CardContent className="space-y-3">
         {statements.map((statement) => (
           <div
-            key={statement.id}
+            key={(statement as any)._id || (statement as any).id}
             className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-4">
@@ -120,16 +155,18 @@ export function StatementList({ statements, isLoading }: StatementListProps) {
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="sm" asChild>
-              <a
-                href={`${API_BASE_URL.replace(/\/$/, "")}/api/statements/${(statement as any)._id || (statement as any).id}/download`}
-                download
-                target="_blank"
-                rel="noreferrer"
-                data-testid={`button-download-statement-${(statement as any)._id || (statement as any).id}`}
-              >
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDownload((statement as any)._id || (statement as any).id, statement.fileName)}
+              disabled={downloadingId === ((statement as any)._id || (statement as any).id)}
+              data-testid={`button-download-statement-${(statement as any)._id || (statement as any).id}`}
+            >
+              {downloadingId === ((statement as any)._id || (statement as any).id) ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
                 <Download className="w-4 h-4" />
-              </a>
+              )}
             </Button>
           </div>
         ))}

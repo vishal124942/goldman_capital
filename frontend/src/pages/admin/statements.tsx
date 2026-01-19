@@ -21,6 +21,7 @@ export default function AdminStatementsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("");
   const [selectedInvestor, setSelectedInvestor] = useState("");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const [uploadInvestor, setUploadInvestor] = useState("");
   const [uploadType, setUploadType] = useState("");
@@ -289,6 +290,46 @@ export default function AdminStatementsPage() {
       });
     } finally {
       setIsDownloadingFiltered(false);
+    }
+  };
+
+  const handleDownload = async (statementId: string, fileName: string) => {
+    setDownloadingId(statementId);
+    try {
+      const downloadPath = `/api/statements/${statementId}/download`;
+      const fullUrl = API_BASE_URL ? `${API_BASE_URL.replace(/\/$/, "")}${downloadPath}` : downloadPath;
+
+      const response = await fetch(fullUrl, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Download failed");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download Started",
+        description: `Downloading ${fileName}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download statement",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -604,23 +645,14 @@ export default function AdminStatementsPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  asChild
+                                  onClick={() => handleDownload((statement as any)._id || statement.id, statement.fileName)}
+                                  disabled={downloadingId === ((statement as any)._id || statement.id)}
                                   data-testid={`admin-button-download-statement-${statement.id}`}
                                 >
-                                  {statement.fileUrl ? (
-                                    <a
-                                      href={statement.fileUrl.startsWith('http')
-                                        ? statement.fileUrl
-                                        : `${API_BASE_URL.replace(/\/$/, "")}${statement.fileUrl.startsWith('/') ? '' : '/'}${statement.fileUrl}`
-                                      }
-                                      download
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      <Download className="w-4 h-4" />
-                                    </a>
+                                  {downloadingId === ((statement as any)._id || statement.id) ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                   ) : (
-                                    <Download className="w-4 h-4 opacity-50 cursor-not-allowed" />
+                                    <Download className="w-4 h-4" />
                                   )}
                                 </Button>
                               </div>
