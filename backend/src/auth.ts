@@ -48,7 +48,7 @@ export async function generateAndSendOtp(userId: string, emailOrPhone: string, t
   });
 
   if (type === "email") {
-    // await sendOtpEmail(emailOrPhone, code); // Skip email sending for local test to avoid rate limits/spam
+    await sendOtpEmail(emailOrPhone, code); // Skip email sending for local test to avoid rate limits/spam
     console.log(`[EMAIL OTP] To: ${emailOrPhone}, Code: ${code}`);
   } else {
     // For phone, we just log it for now
