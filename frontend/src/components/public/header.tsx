@@ -52,13 +52,13 @@ export function Header() {
       gsap.fromTo(
         ".nav-item",
         { opacity: 0, y: -10 },
-        { 
-          opacity: 1, 
-          y: 0, 
-          duration: 0.4, 
-          stagger: 0.05, 
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.4,
+          stagger: 0.05,
           delay: 0.2,
-          ease: "power2.out" 
+          ease: "power2.out"
         }
       );
 
@@ -75,11 +75,10 @@ export function Header() {
   return (
     <header
       ref={headerRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled
-          ? "bg-background/95 backdrop-blur-xl border-b shadow-sm"
-          : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled || isMobileMenuOpen
+        ? "bg-background/95 backdrop-blur-xl border-b shadow-sm"
+        : "bg-transparent"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4 h-16 lg:h-20">
@@ -100,11 +99,10 @@ export function Header() {
               <Link key={item.href} href={item.href}>
                 <Button
                   variant="ghost"
-                  className={`nav-item text-sm font-medium opacity-0 transition-all duration-300 ${
-                    location === item.href
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`nav-item text-sm font-medium opacity-0 transition-all duration-300 ${location === item.href
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
                   data-testid={`nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
                 >
                   {item.label}
@@ -124,7 +122,7 @@ export function Header() {
                     </Button>
                   </Link>
                 ) : (
-                  <Button 
+                  <Button
                     onClick={() => setShowLoginDialog(true)}
                     data-testid="button-login"
                     className="transition-all duration-300 hover:scale-105"
@@ -147,17 +145,16 @@ export function Header() {
         </div>
 
         {isMobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t animate-fade-in">
-            <nav className="flex flex-col gap-1">
+          <div className="lg:hidden py-4 border-t bg-background/98 backdrop-blur-xl animate-fade-in overflow-y-auto max-h-[calc(100vh-4rem)]">
+            <nav className="flex flex-col gap-1 px-2">
               {navItems.map((item, index) => (
                 <Link key={item.href} href={item.href}>
                   <Button
                     variant="ghost"
-                    className={`w-full justify-start text-sm font-medium ${
-                      location === item.href
-                        ? "text-foreground bg-muted"
-                        : "text-muted-foreground"
-                    }`}
+                    className={`w-full justify-start text-sm font-medium ${location === item.href
+                      ? "text-foreground bg-muted"
+                      : "text-muted-foreground"
+                      }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
                     style={{ animationDelay: `${index * 0.05}s` }}
@@ -182,8 +179,8 @@ export function Header() {
             Please select how you would like to access the platform
           </p>
           <div className="grid grid-cols-1 gap-3">
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="block"
               onClick={() => setShowLoginDialog(false)}
               data-testid="button-login-investor"
@@ -200,8 +197,8 @@ export function Header() {
                 </div>
               </div>
             </Link>
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="block"
               onClick={() => setShowLoginDialog(false)}
               data-testid="button-login-admin"
