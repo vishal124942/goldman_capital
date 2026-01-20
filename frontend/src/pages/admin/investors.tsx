@@ -16,14 +16,13 @@ import { Search, Plus, MoreHorizontal, Mail, Phone, X, Loader2, CheckCircle } fr
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, API_BASE_URL } from "@/lib/queryClient";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 const investorSchema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
@@ -138,7 +137,7 @@ export default function AdminInvestorsPage() {
     queryKey: ["/api/admin/investors", selectedInvestor?.id],
     queryFn: async () => {
       if (!selectedInvestor?.id) return null;
-      const res = await fetch(`/api/admin/investors/${selectedInvestor.id}`, { credentials: "include" });
+      const res = await fetch(`${API_BASE_URL}/api/admin/investors/${selectedInvestor.id}`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch details");
       return res.json();
     },
@@ -150,7 +149,7 @@ export default function AdminInvestorsPage() {
     queryKey: ["/api/admin/investors", selectedInvestor?.id, "transactions"],
     queryFn: async () => {
       if (!selectedInvestor?.id) return [];
-      const res = await fetch(`/api/admin/transactions?investorId=${selectedInvestor.id}`, { credentials: "include" });
+      const res = await fetch(`${API_BASE_URL}/api/admin/transactions?investorId=${selectedInvestor.id}`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch transactions");
       return res.json();
     },
